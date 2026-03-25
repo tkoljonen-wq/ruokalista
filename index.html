@@ -18,23 +18,20 @@
       --err:#991b1b;
       --err-soft:#fef2f2;
       --radius:16px;
+      --overlay:rgba(15,23,42,.45);
     }
-
-    * { box-sizing:border-box; }
-
+    *{box-sizing:border-box}
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:var(--bg);
       color:var(--text);
     }
-
     .wrap{
       max-width:1100px;
       margin:0 auto;
       padding:16px;
     }
-
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -42,18 +39,14 @@
       margin-bottom:16px;
       box-shadow:0 2px 12px rgba(0,0,0,.06);
     }
-
-    h1,h2,h3{ margin:0 0 12px; }
-
-    .muted{ color:var(--muted); }
-
+    h1,h2,h3{margin:0 0 12px}
+    .muted{color:var(--muted)}
     label{
       display:block;
       font-weight:700;
       margin:12px 0 6px;
     }
-
-    input, select, button{
+    input, select, button, textarea{
       width:100%;
       padding:12px;
       border:1px solid var(--line);
@@ -61,7 +54,7 @@
       font-size:16px;
       background:#fff;
     }
-
+    textarea{min-height:140px; resize:vertical;}
     button{
       border:none;
       background:var(--accent);
@@ -69,40 +62,29 @@
       font-weight:700;
       cursor:pointer;
     }
-
     button.secondary{
       background:#e5e7eb;
       color:#111827;
     }
-
     button.ghost{
       background:var(--accent-soft);
       color:var(--accent);
+      border:1px solid #c7d2fe;
     }
-
     .row{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
-
-    .row3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:12px;
-    }
-
     @media (max-width:860px){
-      .row,.row3{ grid-template-columns:1fr; }
+      .row{grid-template-columns:1fr}
     }
-
     .chips{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
       margin-top:8px;
     }
-
     .chip{
       width:auto;
       border:1px solid var(--line);
@@ -114,13 +96,11 @@
       font-size:14px;
       font-weight:600;
     }
-
     .chip.active{
       background:var(--accent);
       color:#fff;
       border-color:var(--accent);
     }
-
     .planner-row{
       border:1px solid var(--line);
       border-radius:14px;
@@ -128,13 +108,11 @@
       margin-top:12px;
       background:#fafafa;
     }
-
     .weekday{
       font-weight:800;
       margin-bottom:8px;
       text-transform:uppercase;
     }
-
     .food-list{
       max-height:180px;
       overflow:auto;
@@ -144,17 +122,14 @@
       margin-top:8px;
       padding:6px;
     }
-
     .food-item{
       padding:10px;
       border-radius:10px;
       cursor:pointer;
     }
-
     .food-item:hover{
       background:#f3f4f6;
     }
-
     .selected{
       margin-top:8px;
       background:var(--accent-soft);
@@ -163,44 +138,41 @@
       padding:10px;
       font-weight:700;
     }
-
+    .selected-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .selected-actions button{
+      width:auto;
+      padding:8px 12px;
+      font-size:14px;
+    }
     .inline{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
-
     .status{
       margin-top:12px;
       padding:10px 12px;
       border-radius:12px;
       font-weight:700;
     }
-
-    .status.ok{
-      background:var(--ok-soft);
-      color:var(--ok);
-    }
-
-    .status.err{
-      background:var(--err-soft);
-      color:var(--err);
-    }
-
-    .small{ font-size:14px; }
-
+    .status.ok{background:var(--ok-soft); color:var(--ok)}
+    .status.err{background:var(--err-soft); color:var(--err)}
+    .small{font-size:14px}
     .tagline{
       color:var(--muted);
       font-size:13px;
       margin-top:4px;
     }
-
     .history-item{
       border-top:1px solid var(--line);
       padding:12px 0;
     }
-
     .history-entry{
       display:flex;
       justify-content:space-between;
@@ -208,47 +180,85 @@
       padding:8px 0;
       border-bottom:1px dashed #e5e7eb;
     }
-
-    .history-entry:last-child{
-      border-bottom:none;
-    }
-
+    .history-entry:last-child{border-bottom:none}
     .checkbox{
       width:auto;
       transform:scale(1.15);
     }
-
     .week-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
       gap:8px;
     }
-
     .week-cell{
       border:1px solid var(--line);
       border-radius:12px;
       padding:10px;
       background:#fff;
-      min-height:90px;
+      min-height:110px;
     }
-
     .week-cell h4{
       margin:0 0 6px;
       font-size:14px;
       text-transform:uppercase;
     }
-
     .week-food{
       font-weight:700;
       font-size:14px;
       line-height:1.35;
+      margin-bottom:8px;
     }
-
+    .week-cell button{
+      width:auto;
+      padding:7px 10px;
+      font-size:13px;
+    }
     .editor-block{
       border:1px solid var(--line);
       border-radius:12px;
       padding:12px;
       background:#fafafa;
+    }
+    .modal{
+      position:fixed;
+      inset:0;
+      background:var(--overlay);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:1000;
+    }
+    .modal.open{
+      display:flex;
+    }
+    .modal-card{
+      width:min(820px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .modal-header button{
+      width:auto;
+      padding:8px 12px;
+    }
+    .recipe-block{
+      white-space:pre-wrap;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      line-height:1.45;
     }
   </style>
 </head>
@@ -256,7 +266,7 @@
   <div class="wrap">
     <div class="card">
       <h1>Mitä tänään syötäisiin</h1>
-      <div class="muted">Ruokalistan suunnittelu puhelimella, tiedot Google Sheetsissä.</div>
+      <div class="muted">Ruokalistan suunnittelu puhelimella, tiedot Google Sheetsissä ja reseptit samassa tietokannassa.</div>
     </div>
 
     <div class="card">
@@ -279,17 +289,29 @@
           </select>
         </div>
       </div>
-
       <div class="row" style="margin-top:12px;">
         <button id="buildBtn">Luo ruokalistarunko</button>
         <button id="refreshBtn" class="secondary">Päivitä tiedot</button>
       </div>
-
       <div id="settingsStatus"></div>
     </div>
 
     <div class="card">
-      <h2>2. Lisää uusi ruokalaji</h2>
+      <h2>2. Reseptien tuonti</h2>
+      <div class="small muted">
+        Kopioi reseptidokumentin koko teksti Google Sheetsin välilehdelle <strong>Tuonti</strong>, soluun <strong>A2</strong>. Paina sitten alla olevaa nappia.
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button id="importRecipesBtn">Tuo reseptit</button>
+        <div class="editor-block">
+          <strong>Nykyinen reseptimäärä:</strong> <span id="recipeCount">0</span>
+        </div>
+      </div>
+      <div id="importStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Lisää uusi ruokalaji</h2>
       <div class="row">
         <div>
           <label for="newFoodName">Ruokalajin nimi</label>
@@ -301,13 +323,13 @@
         </div>
       </div>
       <div class="small muted" style="margin-top:8px;">
-        Uusi ruoka voidaan lisätä ensin ilman tageja. Tagit voi lisätä heti alempana.
+        Jos samalla nimellä löytyy resepti Reseptit-välilehdeltä, ohjelma linkittää sen automaattisesti ruokalajiin.
       </div>
       <div id="addFoodStatus"></div>
     </div>
 
     <div class="card">
-      <h2>3. Tagien hallinta</h2>
+      <h2>4. Tagien hallinta</h2>
       <div class="row">
         <div class="editor-block">
           <h3>Lisää uusi tagi</h3>
@@ -324,42 +346,61 @@
           <h3>Liitä tageja ruokaan</h3>
           <label for="foodTagEditorSelect">Ruokalaji</label>
           <select id="foodTagEditorSelect"></select>
-
           <label>Valitse tagit</label>
           <div id="foodEditorTagChips" class="chips"></div>
-
           <div style="margin-top:12px;">
             <button id="saveFoodTagsBtn">Tallenna ruoan tagit</button>
           </div>
         </div>
       </div>
-
       <div id="tagEditorStatus"></div>
     </div>
 
     <div class="card">
-      <h2>4. Ruokalistan suunnittelu</h2>
+      <h2>5. Ruokalistan suunnittelu</h2>
       <label for="planName">Ruokalistan nimi</label>
       <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
-
       <div id="plannerArea"></div>
-
       <div class="row" style="margin-top:12px;">
         <button id="savePlanBtn">Tallenna ruokalista</button>
         <button id="clearPlanBtn" class="secondary">Tyhjennä valinnat</button>
       </div>
-
       <div id="saveStatus"></div>
     </div>
 
     <div class="card">
-      <h2>5. Kompakti viikkonäkymä</h2>
+      <h2>6. Kompakti viikkonäkymä</h2>
       <div id="compactWeekView" class="week-grid"></div>
     </div>
 
     <div class="card">
-      <h2>6. Historia</h2>
+      <h2>7. Historia</h2>
       <div id="historyArea"></div>
+    </div>
+  </div>
+
+  <div id="recipeModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2 id="recipeModalTitle">Resepti</h2>
+          <div id="recipeModalMeta" class="tagline"></div>
+        </div>
+        <button id="closeRecipeModalBtn" class="secondary">Sulje</button>
+      </div>
+
+      <h3>Ainekset</h3>
+      <div id="recipeIngredients" class="recipe-block"></div>
+
+      <div style="height:12px"></div>
+
+      <h3>Valmistus</h3>
+      <div id="recipeInstructions" class="recipe-block"></div>
+
+      <div style="height:12px"></div>
+
+      <h3>Huomiot</h3>
+      <div id="recipeNotes" class="recipe-block"></div>
     </div>
   </div>
 
@@ -428,12 +469,12 @@
       state.tags = result.tags || [];
       state.foods = result.foods || [];
       state.plans = result.recentPlans || [];
+      document.getElementById('recipeCount').textContent = String(result.recipeCount || 0);
 
       renderFoodEditor();
       renderPlanner();
       renderCompactWeek();
       renderHistory();
-
       setStatus('settingsStatus', '');
     }
 
@@ -449,6 +490,8 @@
         foodId: '',
         foodName: '',
         tags: [],
+        recipeId: '',
+        hasRecipe: false,
         eaten: false
       }));
 
@@ -460,6 +503,11 @@
     function getFilteredFoodsForRow(row) {
       if (!row.filterTags || row.filterTags.length === 0) return [...state.foods];
       return state.foods.filter(food => row.filterTags.every(tag => (food.tags || []).includes(tag)));
+    }
+
+    function recipeButtonHtml(recipeId, foodId) {
+      if (!recipeId && !foodId) return '';
+      return `<div class="selected-actions"><button class="ghost show-recipe-btn" data-recipe-id="${escapeHtml(recipeId || '')}" data-food-id="${escapeHtml(foodId || '')}">Näytä resepti</button></div>`;
     }
 
     function renderPlanner() {
@@ -486,20 +534,27 @@
           const tagsText = food.tags.length
             ? ` <span class="tagline">(${escapeHtml(food.tags.join(', '))})</span>`
             : '';
+          const recipeText = food.hasRecipe ? ` <span class="tagline">[resepti]</span>` : '';
 
           return `
             <div class="food-item"
                  data-row="${rowIndex}"
                  data-food-id="${escapeHtml(food.id)}"
                  data-food-name="${escapeHtml(food.name)}"
-                 data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
-              <strong>${escapeHtml(food.name)}</strong>${tagsText}
+                 data-food-tags="${escapeHtml(JSON.stringify(food.tags))}"
+                 data-recipe-id="${escapeHtml(food.recipeId || '')}"
+                 data-has-recipe="${food.hasRecipe ? '1' : '0'}">
+              <strong>${escapeHtml(food.name)}</strong>${tagsText}${recipeText}
             </div>
           `;
         }).join('');
 
         const selectedText = row.foodName
-          ? `<div class="selected">Valittu: ${escapeHtml(row.foodName)}${row.tags.length ? ` <div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}</div>`
+          ? `<div class="selected">
+               Valittu: ${escapeHtml(row.foodName)}
+               ${row.tags.length ? `<div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}
+               ${recipeButtonHtml(row.recipeId, row.foodId)}
+             </div>`
           : '';
 
         wrapper.innerHTML = `
@@ -545,10 +600,14 @@
           const foodId = Number(el.dataset.foodId);
           const foodName = el.dataset.foodName;
           const foodTags = JSON.parse(el.dataset.foodTags || '[]');
+          const recipeId = el.dataset.recipeId || '';
+          const hasRecipe = el.dataset.hasRecipe === '1';
 
           state.planner[rowIndex].foodId = foodId;
           state.planner[rowIndex].foodName = foodName;
           state.planner[rowIndex].tags = foodTags;
+          state.planner[rowIndex].recipeId = recipeId;
+          state.planner[rowIndex].hasRecipe = hasRecipe;
 
           renderPlanner();
           renderCompactWeek();
@@ -569,12 +628,16 @@
           state.planner[rowIndex].foodId = '';
           state.planner[rowIndex].foodName = value;
           state.planner[rowIndex].tags = [];
+          state.planner[rowIndex].recipeId = '';
+          state.planner[rowIndex].hasRecipe = false;
 
           renderPlanner();
           renderCompactWeek();
           setStatus('saveStatus', '');
         };
       });
+
+      bindRecipeButtons();
     }
 
     function renderCompactWeek() {
@@ -590,8 +653,11 @@
           <h4>${escapeHtml(row.weekday)}</h4>
           <div class="week-food">${escapeHtml(row.foodName || '—')}</div>
           ${row.tags && row.tags.length ? `<div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}
+          ${row.hasRecipe || row.recipeId || row.foodId ? `<button class="ghost show-recipe-btn" data-recipe-id="${escapeHtml(row.recipeId || '')}" data-food-id="${escapeHtml(row.foodId || '')}">Näytä resepti</button>` : ''}
         </div>
       `).join('');
+
+      bindRecipeButtons();
     }
 
     async function addFood() {
@@ -665,7 +731,7 @@
       if (!select) return;
 
       select.innerHTML = state.foods.map(food => `
-        <option value="${escapeHtml(food.id)}">${escapeHtml(food.name)}</option>
+        <option value="${escapeHtml(food.id)}">${escapeHtml(food.name)}${food.hasRecipe ? ' [resepti]' : ''}</option>
       `).join('');
 
       if (!state.foods.length) {
@@ -771,6 +837,28 @@
       setStatus('saveStatus', 'Ruokalista tallennettu.');
     }
 
+    async function importRecipes() {
+      setStatus('importStatus', 'Tuodaan reseptejä...');
+      const result = await apiPost({ action: 'importRecipesFromRaw' });
+
+      if (!result.ok) {
+        setStatus('importStatus', result.error || 'Reseptien tuonti epäonnistui', false);
+        return;
+      }
+
+      state.foods = result.foods || state.foods;
+      document.getElementById('recipeCount').textContent = String(result.recipeCount || 0);
+      renderFoodEditor();
+      renderPlanner();
+      renderCompactWeek();
+
+      const r = result.result || {};
+      setStatus(
+        'importStatus',
+        `Tuonti valmis. Luettu ${r.parsed || 0}, uusia ${r.imported || 0}, päivitetty ${r.updated || 0}.`
+      );
+    }
+
     async function refreshPlans() {
       const result = await apiGet('plans', { limit: 12 });
       if (!result.ok) return;
@@ -795,6 +883,7 @@
             <div>
               <strong>${escapeHtml(entry.weekday)}</strong>: ${escapeHtml(entry.foodName)}
               ${entry.tags && entry.tags.length ? `<div class="tagline">${escapeHtml(entry.tags.join(', '))}</div>` : ''}
+              ${entry.hasRecipe || entry.recipeId ? `<div class="selected-actions"><button class="ghost show-recipe-btn" data-recipe-id="${escapeHtml(entry.recipeId || '')}" data-food-id="${escapeHtml(entry.foodId || '')}">Näytä resepti</button></div>` : ''}
             </div>
             <div>
               <label class="inline">
@@ -841,6 +930,44 @@
           renderHistory();
         };
       });
+
+      bindRecipeButtons();
+    }
+
+    async function showRecipe(recipeId, foodId) {
+      const result = await apiGet('recipe', {
+        recipeId: recipeId || '',
+        foodId: foodId || ''
+      });
+
+      if (!result.ok) {
+        setStatus('saveStatus', result.error || 'Reseptin haku epäonnistui', false);
+        return;
+      }
+
+      if (!result.recipe) {
+        setStatus('saveStatus', 'Tälle ruokalajille ei löytynyt reseptiä.', false);
+        return;
+      }
+
+      const recipe = result.recipe;
+
+      document.getElementById('recipeModalTitle').textContent = recipe.name || 'Resepti';
+      document.getElementById('recipeModalMeta').textContent = recipe.source || '';
+      document.getElementById('recipeIngredients').textContent = recipe.ingredients || 'Ei aineksia.';
+      document.getElementById('recipeInstructions').textContent = recipe.instructions || 'Ei valmistusohjetta.';
+      document.getElementById('recipeNotes').textContent = recipe.notes || 'Ei huomioita.';
+      document.getElementById('recipeModal').classList.add('open');
+    }
+
+    function bindRecipeButtons() {
+      document.querySelectorAll('.show-recipe-btn').forEach(btn => {
+        btn.onclick = () => showRecipe(btn.dataset.recipeId || '', btn.dataset.foodId || '');
+      });
+    }
+
+    function closeRecipeModal() {
+      document.getElementById('recipeModal').classList.remove('open');
     }
 
     function clearPlanner() {
@@ -850,6 +977,8 @@
         foodId: '',
         foodName: '',
         tags: [],
+        recipeId: '',
+        hasRecipe: false,
         eaten: false
       }));
 
@@ -865,6 +994,11 @@
     document.getElementById('saveFoodTagsBtn').addEventListener('click', saveFoodTags);
     document.getElementById('savePlanBtn').addEventListener('click', savePlan);
     document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
+    document.getElementById('importRecipesBtn').addEventListener('click', importRecipes);
+    document.getElementById('closeRecipeModalBtn').addEventListener('click', closeRecipeModal);
+    document.getElementById('recipeModal').addEventListener('click', (e) => {
+      if (e.target.id === 'recipeModal') closeRecipeModal();
+    });
 
     document.getElementById('foodTagEditorSelect').addEventListener('change', (e) => {
       state.selectedEditorFoodId = Number(e.target.value);
