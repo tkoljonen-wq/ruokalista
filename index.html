@@ -20,7 +20,7 @@
       --radius:16px;
     }
 
-    *{box-sizing:border-box}
+    * { box-sizing:border-box; }
 
     body{
       margin:0;
@@ -43,9 +43,9 @@
       box-shadow:0 2px 12px rgba(0,0,0,.06);
     }
 
-    h1,h2,h3{margin:0 0 12px}
+    h1,h2,h3{ margin:0 0 12px; }
 
-    .muted{color:var(--muted)}
+    .muted{ color:var(--muted); }
 
     label{
       display:block;
@@ -93,7 +93,7 @@
     }
 
     @media (max-width:860px){
-      .row,.row3{grid-template-columns:1fr}
+      .row,.row3{ grid-template-columns:1fr; }
     }
 
     .chips{
@@ -188,7 +188,7 @@
       color:var(--err);
     }
 
-    .small{font-size:14px}
+    .small{ font-size:14px; }
 
     .tagline{
       color:var(--muted);
@@ -419,6 +419,7 @@
     async function loadInit() {
       setStatus('settingsStatus', 'Ladataan tietoja...');
       const result = await apiGet('init');
+
       if (!result.ok) {
         setStatus('settingsStatus', result.error || 'Alustus epäonnistui', false);
         return;
@@ -432,6 +433,7 @@
       renderPlanner();
       renderCompactWeek();
       renderHistory();
+
       setStatus('settingsStatus', '');
     }
 
@@ -462,6 +464,7 @@
 
     function renderPlanner() {
       const area = document.getElementById('plannerArea');
+
       if (!state.planner.length) {
         area.innerHTML = '<div class="muted">Luo ensin ruokalistarunko.</div>';
         return;
@@ -478,15 +481,21 @@
         `).join('');
 
         const filteredFoods = getFilteredFoodsForRow(row);
+
         const foodsHtml = filteredFoods.map(food => {
-          const tagsText = food.tags.length ? ` <span class="tagline">(${escapeHtml(food.tags.join(', '))})</span>` : '';
-          return `<div class="food-item"
-                       data-row="${rowIndex}"
-                       data-food-id="${escapeHtml(food.id)}"
-                       data-food-name="${escapeHtml(food.name)}"
-                       data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
-                    <strong>${escapeHtml(food.name)}</strong>${tagsText}
-                  </div>`;
+          const tagsText = food.tags.length
+            ? ` <span class="tagline">(${escapeHtml(food.tags.join(', '))})</span>`
+            : '';
+
+          return `
+            <div class="food-item"
+                 data-row="${rowIndex}"
+                 data-food-id="${escapeHtml(food.id)}"
+                 data-food-name="${escapeHtml(food.name)}"
+                 data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
+              <strong>${escapeHtml(food.name)}</strong>${tagsText}
+            </div>
+          `;
         }).join('');
 
         const selectedText = row.foodName
@@ -587,12 +596,14 @@
 
     async function addFood() {
       const foodName = (document.getElementById('newFoodName').value || '').trim();
+
       if (!foodName) {
         setStatus('addFoodStatus', 'Kirjoita ruokalajin nimi.', false);
         return;
       }
 
       setStatus('addFoodStatus', 'Tallennetaan ruokalajia...');
+
       const result = await apiPost({
         action: 'addFood',
         foodName,
@@ -624,6 +635,7 @@
       }
 
       setStatus('tagEditorStatus', 'Tallennetaan tagia...');
+
       const result = await apiPost({
         action: 'addTag',
         tagName,
@@ -641,7 +653,11 @@
 
       renderFoodEditor();
       renderPlanner();
-      setStatus('tagEditorStatus', result.tag && result.tag.existed ? 'Tagi oli jo olemassa.' : 'Tagi lisätty.');
+
+      setStatus(
+        'tagEditorStatus',
+        result.tag && result.tag.existed ? 'Tagi oli jo olemassa.' : 'Tagi lisätty.'
+      );
     }
 
     function renderFoodEditor() {
@@ -683,11 +699,13 @@
       document.querySelectorAll('[data-editor-tag]').forEach(btn => {
         btn.onclick = () => {
           const tag = btn.dataset.editorTag;
+
           if (state.editorSelectedTags.includes(tag)) {
             state.editorSelectedTags = state.editorSelectedTags.filter(t => t !== tag);
           } else {
             state.editorSelectedTags.push(tag);
           }
+
           renderFoodEditorTags();
         };
       });
@@ -700,6 +718,7 @@
       }
 
       setStatus('tagEditorStatus', 'Tallennetaan ruoan tageja...');
+
       const result = await apiPost({
         action: 'updateFoodTags',
         foodId: state.selectedEditorFoodId,
@@ -735,6 +754,7 @@
       const planName = (document.getElementById('planName').value || '').trim();
 
       setStatus('saveStatus', 'Tallennetaan ruokalistaa...');
+
       const result = await apiPost({
         action: 'savePlan',
         planName,
@@ -787,8 +807,7 @@
               </label>
             </div>
           </div>
-        `;
-        }).join('');
+        `).join('');
 
         return `
           <div class="history-item">
@@ -833,6 +852,7 @@
         tags: [],
         eaten: false
       }));
+
       renderPlanner();
       renderCompactWeek();
       setStatus('saveStatus', '');
