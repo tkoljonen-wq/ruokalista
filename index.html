@@ -27,7 +27,7 @@
       color:var(--text);
     }
     .wrap{
-      max-width:820px;
+      max-width:1100px;
       margin:0 auto;
       padding:16px;
     }
@@ -73,8 +73,13 @@
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
-    @media (max-width:720px){
-      .row{grid-template-columns:1fr}
+    .row3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:860px){
+      .row,.row3{grid-template-columns:1fr}
     }
     .chips{
       display:flex;
@@ -86,7 +91,7 @@
       width:auto;
       border:1px solid var(--line);
       border-radius:999px;
-      padding:8px 12px;
+      padding:7px 11px;
       background:#fff;
       cursor:pointer;
       font-size:14px;
@@ -109,7 +114,7 @@
       text-transform:uppercase;
     }
     .food-list{
-      max-height:220px;
+      max-height:180px;
       overflow:auto;
       border:1px solid var(--line);
       border-radius:12px;
@@ -145,15 +150,14 @@
       border-radius:12px;
       font-weight:700;
     }
-    .status.ok{
-      background:var(--ok-soft);
-      color:var(--ok);
-    }
-    .status.err{
-      background:var(--err-soft);
-      color:var(--err);
-    }
+    .status.ok{ background:var(--ok-soft); color:var(--ok); }
+    .status.err{ background:var(--err-soft); color:var(--err); }
     .small{font-size:14px}
+    .tagline{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:4px;
+    }
     .history-item{
       border-top:1px solid var(--line);
       padding:12px 0;
@@ -165,17 +169,35 @@
       padding:8px 0;
       border-bottom:1px dashed #e5e7eb;
     }
-    .history-entry:last-child{
-      border-bottom:none;
+    .history-entry:last-child{ border-bottom:none; }
+    .checkbox{ width:auto; transform:scale(1.15); }
+    .week-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+      gap:8px;
     }
-    .checkbox{
-      width:auto;
-      transform:scale(1.2);
+    .week-cell{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:#fff;
+      min-height:90px;
     }
-    .tagline{
-      color:var(--muted);
-      font-size:13px;
-      margin-top:4px;
+    .week-cell h4{
+      margin:0 0 6px;
+      font-size:14px;
+      text-transform:uppercase;
+    }
+    .week-food{
+      font-weight:700;
+      font-size:14px;
+      line-height:1.35;
+    }
+    .editor-block{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:#fafafa;
     }
   </style>
 </head>
@@ -188,7 +210,6 @@
 
     <div class="card">
       <h2>1. Ruokalistan asetukset</h2>
-
       <div class="row">
         <div>
           <label for="daysCount">Monelleko päivälle?</label>
@@ -208,9 +229,6 @@
         </div>
       </div>
 
-      <label>Suodata ruokia tagien mukaan</label>
-      <div id="tagChips" class="chips"></div>
-
       <div class="row" style="margin-top:12px;">
         <button id="buildBtn">Luo ruokalistarunko</button>
         <button id="refreshBtn" class="secondary">Päivitä tiedot</button>
@@ -221,22 +239,55 @@
 
     <div class="card">
       <h2>2. Lisää uusi ruokalaji</h2>
-      <label for="newFoodName">Ruokalajin nimi</label>
-      <input id="newFoodName" type="text" placeholder="Esim. Kanawokki">
-
-      <div class="inline" style="margin-top:12px;">
-        <button id="addFoodBtn">Lisää ruokalaji</button>
+      <div class="row">
+        <div>
+          <label for="newFoodName">Ruokalajin nimi</label>
+          <input id="newFoodName" type="text" placeholder="Esim. Kanawokki">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="addFoodBtn">Lisää ruokalaji</button>
+        </div>
       </div>
-
       <div class="small muted" style="margin-top:8px;">
-        Tässä versiossa uusi ruoka tallennetaan listalle ilman tageja. Tagit voi lisätä myöhemmin Sheetsissä.
+        Uusi ruoka voidaan lisätä ensin ilman tageja. Tagit voi lisätä heti alempana.
       </div>
-
       <div id="addFoodStatus"></div>
     </div>
 
     <div class="card">
-      <h2>3. Ruokalistan suunnittelu</h2>
+      <h2>3. Tagien hallinta</h2>
+      <div class="row">
+        <div class="editor-block">
+          <h3>Lisää uusi tagi</h3>
+          <label for="newTagName">Tagin nimi</label>
+          <input id="newTagName" type="text" placeholder="Esim. arkiruoka">
+          <label for="newTagDescription">Kuvaus</label>
+          <input id="newTagDescription" type="text" placeholder="Valinnainen kuvaus">
+          <div style="margin-top:12px;">
+            <button id="addTagBtn">Lisää tagi</button>
+          </div>
+        </div>
+
+        <div class="editor-block">
+          <h3>Liitä tageja ruokaan</h3>
+          <label for="foodTagEditorSelect">Ruokalaji</label>
+          <select id="foodTagEditorSelect"></select>
+
+          <label>Valitse tagit</label>
+          <div id="foodEditorTagChips" class="chips"></div>
+
+          <div style="margin-top:12px;">
+            <button id="saveFoodTagsBtn">Tallenna ruoan tagit</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tagEditorStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>4. Ruokalistan suunnittelu</h2>
       <label for="planName">Ruokalistan nimi</label>
       <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
 
@@ -251,38 +302,47 @@
     </div>
 
     <div class="card">
-      <h2>4. Historia</h2>
+      <h2>5. Kompakti viikkonäkymä</h2>
+      <div id="compactWeekView" class="week-grid"></div>
+    </div>
+
+    <div class="card">
+      <h2>6. Historia</h2>
       <div id="historyArea"></div>
     </div>
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzH7zd0k3Xifdu0GzDA0UHa2kiAJMzYr9otTUW8WDRIBmTKr8PcaHYUT7hFi3ky7ZIWAw/exec';
+    const SCRIPT_URL = 'PAITA_TAHAN_APPS_SCRIPT_WEB_APP_URL';
 
     const state = {
       tags: [],
       foods: [],
-      selectedTags: [],
       planner: [],
       weekdays: ['ma', 'ti', 'ke', 'to', 'pe', 'la', 'su'],
-      plans: []
+      plans: [],
+      selectedEditorFoodId: null,
+      editorSelectedTags: []
     };
 
-    function weekdaySequence(start, count) {
-      const startIndex = state.weekdays.indexOf(start);
-      const result = [];
-      for (let i = 0; i < count; i++) {
-        result.push(state.weekdays[(startIndex + i) % 7]);
-      }
-      return result;
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function setStatus(elId, text, ok = true) {
+      const el = document.getElementById(elId);
+      el.innerHTML = text ? `<div class="status ${ok ? 'ok' : 'err'}">${escapeHtml(text)}</div>` : '';
     }
 
     async function apiGet(action, params = {}) {
       const url = new URL(SCRIPT_URL);
       url.searchParams.set('action', action);
-      for (const [k, v] of Object.entries(params)) {
-        url.searchParams.set(k, v);
-      }
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
       const res = await fetch(url.toString());
       return res.json();
     }
@@ -296,62 +356,17 @@
       return res.json();
     }
 
-    function setStatus(elId, text, ok = true) {
-      const el = document.getElementById(elId);
-      if (!text) {
-        el.innerHTML = '';
-        return;
+    function weekdaySequence(start, count) {
+      const startIndex = state.weekdays.indexOf(start);
+      const result = [];
+      for (let i = 0; i < count; i++) {
+        result.push(state.weekdays[(startIndex + i) % 7]);
       }
-      el.innerHTML = `<div class="status ${ok ? 'ok' : 'err'}">${escapeHtml(text)}</div>`;
-    }
-
-    function escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
-
-    function renderTags() {
-      const wrap = document.getElementById('tagChips');
-      wrap.innerHTML = '';
-
-      state.tags.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.className = 'chip' + (state.selectedTags.includes(tag) ? ' active' : '');
-        btn.textContent = tag;
-        btn.onclick = async () => {
-          if (state.selectedTags.includes(tag)) {
-            state.selectedTags = state.selectedTags.filter(t => t !== tag);
-          } else {
-            state.selectedTags.push(tag);
-          }
-          renderTags();
-          await reloadFoods();
-          renderPlanner();
-        };
-        wrap.appendChild(btn);
-      });
-    }
-
-    async function reloadFoods() {
-      const result = await apiGet('foods', {
-        tags: state.selectedTags.join(',')
-      });
-
-      if (!result.ok) {
-        setStatus('settingsStatus', result.error || 'Ruokien haku epäonnistui', false);
-        return;
-      }
-
-      state.foods = result.foods || [];
+      return result;
     }
 
     async function loadInit() {
-      setStatus('settingsStatus', 'Ladataan tietoja...', true);
-
+      setStatus('settingsStatus', 'Ladataan tietoja...');
       const result = await apiGet('init');
       if (!result.ok) {
         setStatus('settingsStatus', result.error || 'Alustus epäonnistui', false);
@@ -362,8 +377,9 @@
       state.foods = result.foods || [];
       state.plans = result.recentPlans || [];
 
-      renderTags();
+      renderFoodEditor();
       renderPlanner();
+      renderCompactWeek();
       renderHistory();
       setStatus('settingsStatus', '');
     }
@@ -376,6 +392,7 @@
       state.planner = seq.map((weekday, i) => ({
         sequence: i + 1,
         weekday,
+        filterTags: [],
         foodId: '',
         foodName: '',
         tags: [],
@@ -383,12 +400,17 @@
       }));
 
       renderPlanner();
+      renderCompactWeek();
       setStatus('saveStatus', '');
+    }
+
+    function getFilteredFoodsForRow(row) {
+      if (!row.filterTags || row.filterTags.length === 0) return [...state.foods];
+      return state.foods.filter(food => row.filterTags.every(tag => (food.tags || []).includes(tag)));
     }
 
     function renderPlanner() {
       const area = document.getElementById('plannerArea');
-
       if (!state.planner.length) {
         area.innerHTML = '<div class="muted">Luo ensin ruokalistarunko.</div>';
         return;
@@ -400,22 +422,34 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'planner-row';
 
-        const selectedText = row.foodName
-          ? `<div class="selected">Valittu: ${escapeHtml(row.foodName)}</div>`
-          : '';
+        const filterChips = state.tags.map(tag => `
+          <button class="chip ${row.filterTags.includes(tag) ? 'active' : ''}" data-row-tag="${rowIndex}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>
+        `).join('');
 
-        const foodsHtml = state.foods.map(food => {
+        const filteredFoods = getFilteredFoodsForRow(row);
+        const foodsHtml = filteredFoods.map(food => {
           const tagsText = food.tags.length ? ` <span class="tagline">(${escapeHtml(food.tags.join(', '))})</span>` : '';
-          return `<div class="food-item" data-row="${rowIndex}" data-food-id="${escapeHtml(food.id)}" data-food-name="${escapeHtml(food.name)}" data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
+          return `<div class="food-item"
+                       data-row="${rowIndex}"
+                       data-food-id="${escapeHtml(food.id)}"
+                       data-food-name="${escapeHtml(food.name)}"
+                       data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
                     <strong>${escapeHtml(food.name)}</strong>${tagsText}
                   </div>`;
         }).join('');
 
+        const selectedText = row.foodName
+          ? `<div class="selected">Valittu: ${escapeHtml(row.foodName)}${row.tags.length ? ` <div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}</div>`
+          : '';
+
         wrapper.innerHTML = `
           <div class="weekday">${escapeHtml(row.weekday)}</div>
 
+          <label>Tämän päivän tagisuodatus</label>
+          <div class="chips">${filterChips || '<div class="muted">Ei tageja</div>'}</div>
+
           <label>Valitse listalta</label>
-          <div class="food-list">${foodsHtml || '<div class="muted">Ei ruokalajeja tällä suodatuksella.</div>'}</div>
+          <div class="food-list">${foodsHtml || '<div class="muted">Ei ruokia valituilla tageilla.</div>'}</div>
 
           <label>Käsin kirjoitettu vaihtoehto</label>
           <div class="row">
@@ -429,17 +463,35 @@
         area.appendChild(wrapper);
       });
 
+      document.querySelectorAll('[data-row-tag]').forEach(btn => {
+        btn.onclick = () => {
+          const rowIndex = Number(btn.dataset.rowTag);
+          const tag = btn.dataset.tag;
+          const row = state.planner[rowIndex];
+
+          if (row.filterTags.includes(tag)) {
+            row.filterTags = row.filterTags.filter(t => t !== tag);
+          } else {
+            row.filterTags.push(tag);
+          }
+
+          renderPlanner();
+        };
+      });
+
       document.querySelectorAll('.food-item').forEach(el => {
         el.onclick = () => {
           const rowIndex = Number(el.dataset.row);
-          const foodId = el.dataset.foodId;
+          const foodId = Number(el.dataset.foodId);
           const foodName = el.dataset.foodName;
           const foodTags = JSON.parse(el.dataset.foodTags || '[]');
 
           state.planner[rowIndex].foodId = foodId;
           state.planner[rowIndex].foodName = foodName;
           state.planner[rowIndex].tags = foodTags;
+
           renderPlanner();
+          renderCompactWeek();
         };
       });
 
@@ -448,6 +500,7 @@
           const rowIndex = Number(btn.dataset.manualRow);
           const input = document.getElementById(`manualFood_${rowIndex}`);
           const value = (input.value || '').trim();
+
           if (!value) {
             setStatus('saveStatus', 'Kirjoita ruokalaji ennen valintaa.', false);
             return;
@@ -456,10 +509,29 @@
           state.planner[rowIndex].foodId = '';
           state.planner[rowIndex].foodName = value;
           state.planner[rowIndex].tags = [];
+
           renderPlanner();
+          renderCompactWeek();
           setStatus('saveStatus', '');
         };
       });
+    }
+
+    function renderCompactWeek() {
+      const area = document.getElementById('compactWeekView');
+
+      if (!state.planner.length) {
+        area.innerHTML = '<div class="muted">Viikkonäkymä ilmestyy tähän, kun luot ruokalistarungon.</div>';
+        return;
+      }
+
+      area.innerHTML = state.planner.map(row => `
+        <div class="week-cell">
+          <h4>${escapeHtml(row.weekday)}</h4>
+          <div class="week-food">${escapeHtml(row.foodName || '—')}</div>
+          ${row.tags && row.tags.length ? `<div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}
+        </div>
+      `).join('');
     }
 
     async function addFood() {
@@ -469,8 +541,7 @@
         return;
       }
 
-      setStatus('addFoodStatus', 'Tallennetaan ruokalajia...', true);
-
+      setStatus('addFoodStatus', 'Tallennetaan ruokalajia...');
       const result = await apiPost({
         action: 'addFood',
         foodName,
@@ -487,9 +558,115 @@
       state.foods = result.foods || state.foods;
       state.tags = result.tags || state.tags;
 
-      renderTags();
+      renderFoodEditor();
       renderPlanner();
       setStatus('addFoodStatus', 'Ruokalaji lisätty.');
+    }
+
+    async function addTag() {
+      const tagName = (document.getElementById('newTagName').value || '').trim();
+      const description = (document.getElementById('newTagDescription').value || '').trim();
+
+      if (!tagName) {
+        setStatus('tagEditorStatus', 'Kirjoita tagin nimi.', false);
+        return;
+      }
+
+      setStatus('tagEditorStatus', 'Tallennetaan tagia...');
+      const result = await apiPost({
+        action: 'addTag',
+        tagName,
+        description
+      });
+
+      if (!result.ok) {
+        setStatus('tagEditorStatus', result.error || 'Tagin lisäys epäonnistui', false);
+        return;
+      }
+
+      document.getElementById('newTagName').value = '';
+      document.getElementById('newTagDescription').value = '';
+      state.tags = result.tags || state.tags;
+
+      renderFoodEditor();
+      renderPlanner();
+      setStatus('tagEditorStatus', result.tag && result.tag.existed ? 'Tagi oli jo olemassa.' : 'Tagi lisätty.');
+    }
+
+    function renderFoodEditor() {
+      const select = document.getElementById('foodTagEditorSelect');
+      if (!select) return;
+
+      select.innerHTML = state.foods.map(food => `
+        <option value="${escapeHtml(food.id)}">${escapeHtml(food.name)}</option>
+      `).join('');
+
+      if (!state.foods.length) {
+        state.selectedEditorFoodId = null;
+        document.getElementById('foodEditorTagChips').innerHTML = '<div class="muted">Ei ruokia</div>';
+        return;
+      }
+
+      if (!state.selectedEditorFoodId || !state.foods.some(f => Number(f.id) === Number(state.selectedEditorFoodId))) {
+        state.selectedEditorFoodId = Number(state.foods[0].id);
+      }
+
+      select.value = String(state.selectedEditorFoodId);
+
+      const selectedFood = state.foods.find(f => Number(f.id) === Number(state.selectedEditorFoodId));
+      state.editorSelectedTags = selectedFood ? [...selectedFood.tags] : [];
+
+      renderFoodEditorTags();
+    }
+
+    function renderFoodEditorTags() {
+      const wrap = document.getElementById('foodEditorTagChips');
+      if (!wrap) return;
+
+      wrap.innerHTML = state.tags.map(tag => `
+        <button class="chip ${state.editorSelectedTags.includes(tag) ? 'active' : ''}" data-editor-tag="${escapeHtml(tag)}">
+          ${escapeHtml(tag)}
+        </button>
+      `).join('') || '<div class="muted">Ei tageja</div>';
+
+      document.querySelectorAll('[data-editor-tag]').forEach(btn => {
+        btn.onclick = () => {
+          const tag = btn.dataset.editorTag;
+          if (state.editorSelectedTags.includes(tag)) {
+            state.editorSelectedTags = state.editorSelectedTags.filter(t => t !== tag);
+          } else {
+            state.editorSelectedTags.push(tag);
+          }
+          renderFoodEditorTags();
+        };
+      });
+    }
+
+    async function saveFoodTags() {
+      if (!state.selectedEditorFoodId) {
+        setStatus('tagEditorStatus', 'Valitse ensin ruokalaji.', false);
+        return;
+      }
+
+      setStatus('tagEditorStatus', 'Tallennetaan ruoan tageja...');
+      const result = await apiPost({
+        action: 'updateFoodTags',
+        foodId: state.selectedEditorFoodId,
+        tags: state.editorSelectedTags
+      });
+
+      if (!result.ok) {
+        setStatus('tagEditorStatus', result.error || 'Ruoan tagien tallennus epäonnistui', false);
+        return;
+      }
+
+      state.foods = result.foods || state.foods;
+      state.tags = result.tags || state.tags;
+
+      renderFoodEditor();
+      renderPlanner();
+      renderCompactWeek();
+      setStatus('tagEditorStatus', 'Ruoan tagit tallennettu.');
     }
 
     async function savePlan() {
@@ -506,8 +683,7 @@
 
       const planName = (document.getElementById('planName').value || '').trim();
 
-      setStatus('saveStatus', 'Tallennetaan ruokalistaa...', true);
-
+      setStatus('saveStatus', 'Tallennetaan ruokalistaa...');
       const result = await apiPost({
         action: 'savePlan',
         planName,
@@ -525,7 +701,7 @@
     }
 
     async function refreshPlans() {
-      const result = await apiGet('plans', { limit: 10 });
+      const result = await apiGet('plans', { limit: 12 });
       if (!result.ok) return;
       state.plans = result.plans || [];
       renderHistory();
@@ -541,9 +717,7 @@
 
       area.innerHTML = state.plans.map(plan => {
         const created = new Date(plan.createdAt);
-        const createdText = isNaN(created.getTime())
-          ? ''
-          : created.toLocaleString('fi-FI');
+        const createdText = isNaN(created.getTime()) ? '' : created.toLocaleString('fi-FI');
 
         const entries = (plan.entries || []).map(entry => `
           <div class="history-entry">
@@ -601,20 +775,31 @@
     function clearPlanner() {
       state.planner = state.planner.map(r => ({
         ...r,
+        filterTags: [],
         foodId: '',
         foodName: '',
         tags: [],
         eaten: false
       }));
       renderPlanner();
+      renderCompactWeek();
       setStatus('saveStatus', '');
     }
 
     document.getElementById('buildBtn').addEventListener('click', buildPlanner);
     document.getElementById('refreshBtn').addEventListener('click', loadInit);
     document.getElementById('addFoodBtn').addEventListener('click', addFood);
+    document.getElementById('addTagBtn').addEventListener('click', addTag);
+    document.getElementById('saveFoodTagsBtn').addEventListener('click', saveFoodTags);
     document.getElementById('savePlanBtn').addEventListener('click', savePlan);
     document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
+
+    document.getElementById('foodTagEditorSelect').addEventListener('change', (e) => {
+      state.selectedEditorFoodId = Number(e.target.value);
+      const selectedFood = state.foods.find(f => Number(f.id) === Number(state.selectedEditorFoodId));
+      state.editorSelectedTags = selectedFood ? [...selectedFood.tags] : [];
+      renderFoodEditorTags();
+    });
 
     loadInit();
   </script>
