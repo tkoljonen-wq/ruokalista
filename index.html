@@ -20,18 +20,22 @@
       --radius:16px;
       --overlay:rgba(15,23,42,.45);
     }
-    *{box-sizing:border-box}
+
+    * { box-sizing:border-box; }
+
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:var(--bg);
       color:var(--text);
     }
+
     .wrap{
       max-width:1100px;
       margin:0 auto;
       padding:16px;
     }
+
     .card{
       background:var(--card);
       border-radius:var(--radius);
@@ -39,13 +43,17 @@
       margin-bottom:16px;
       box-shadow:0 2px 12px rgba(0,0,0,.06);
     }
-    h1,h2,h3{margin:0 0 12px}
-    .muted{color:var(--muted)}
+
+    h1,h2,h3{ margin:0 0 12px; }
+
+    .muted{ color:var(--muted); }
+
     label{
       display:block;
       font-weight:700;
       margin:12px 0 6px;
     }
+
     input, select, button, textarea{
       width:100%;
       padding:12px;
@@ -54,7 +62,12 @@
       font-size:16px;
       background:#fff;
     }
-    textarea{min-height:140px; resize:vertical;}
+
+    textarea{
+      min-height:140px;
+      resize:vertical;
+    }
+
     button{
       border:none;
       background:var(--accent);
@@ -62,29 +75,35 @@
       font-weight:700;
       cursor:pointer;
     }
+
     button.secondary{
       background:#e5e7eb;
       color:#111827;
     }
+
     button.ghost{
       background:var(--accent-soft);
       color:var(--accent);
       border:1px solid #c7d2fe;
     }
+
     .row{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px;
     }
+
     @media (max-width:860px){
-      .row{grid-template-columns:1fr}
+      .row{ grid-template-columns:1fr; }
     }
+
     .chips{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
       margin-top:8px;
     }
+
     .chip{
       width:auto;
       border:1px solid var(--line);
@@ -96,11 +115,13 @@
       font-size:14px;
       font-weight:600;
     }
+
     .chip.active{
       background:var(--accent);
       color:#fff;
       border-color:var(--accent);
     }
+
     .planner-row{
       border:1px solid var(--line);
       border-radius:14px;
@@ -108,11 +129,13 @@
       margin-top:12px;
       background:#fafafa;
     }
+
     .weekday{
       font-weight:800;
       margin-bottom:8px;
       text-transform:uppercase;
     }
+
     .food-list{
       max-height:180px;
       overflow:auto;
@@ -122,14 +145,17 @@
       margin-top:8px;
       padding:6px;
     }
+
     .food-item{
       padding:10px;
       border-radius:10px;
       cursor:pointer;
     }
+
     .food-item:hover{
       background:#f3f4f6;
     }
+
     .selected{
       margin-top:8px;
       background:var(--accent-soft);
@@ -138,41 +164,57 @@
       padding:10px;
       font-weight:700;
     }
+
     .selected-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       margin-top:8px;
     }
+
     .selected-actions button{
       width:auto;
       padding:8px 12px;
       font-size:14px;
     }
+
     .inline{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
+
     .status{
       margin-top:12px;
       padding:10px 12px;
       border-radius:12px;
       font-weight:700;
     }
-    .status.ok{background:var(--ok-soft); color:var(--ok)}
-    .status.err{background:var(--err-soft); color:var(--err)}
-    .small{font-size:14px}
+
+    .status.ok{
+      background:var(--ok-soft);
+      color:var(--ok);
+    }
+
+    .status.err{
+      background:var(--err-soft);
+      color:var(--err);
+    }
+
+    .small{ font-size:14px; }
+
     .tagline{
       color:var(--muted);
       font-size:13px;
       margin-top:4px;
     }
+
     .history-item{
       border-top:1px solid var(--line);
       padding:12px 0;
     }
+
     .history-entry{
       display:flex;
       justify-content:space-between;
@@ -180,16 +222,22 @@
       padding:8px 0;
       border-bottom:1px dashed #e5e7eb;
     }
-    .history-entry:last-child{border-bottom:none}
+
+    .history-entry:last-child{
+      border-bottom:none;
+    }
+
     .checkbox{
       width:auto;
       transform:scale(1.15);
     }
+
     .week-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
       gap:8px;
     }
+
     .week-cell{
       border:1px solid var(--line);
       border-radius:12px;
@@ -197,28 +245,33 @@
       background:#fff;
       min-height:110px;
     }
+
     .week-cell h4{
       margin:0 0 6px;
       font-size:14px;
       text-transform:uppercase;
     }
+
     .week-food{
       font-weight:700;
       font-size:14px;
       line-height:1.35;
       margin-bottom:8px;
     }
+
     .week-cell button{
       width:auto;
       padding:7px 10px;
       font-size:13px;
     }
+
     .editor-block{
       border:1px solid var(--line);
       border-radius:12px;
       padding:12px;
       background:#fafafa;
     }
+
     .modal{
       position:fixed;
       inset:0;
@@ -229,9 +282,11 @@
       padding:16px;
       z-index:1000;
     }
+
     .modal.open{
       display:flex;
     }
+
     .modal-card{
       width:min(820px, 100%);
       max-height:90vh;
@@ -241,6 +296,7 @@
       padding:18px;
       box-shadow:0 20px 60px rgba(0,0,0,.25);
     }
+
     .modal-header{
       display:flex;
       justify-content:space-between;
@@ -248,10 +304,12 @@
       gap:12px;
       margin-bottom:14px;
     }
+
     .modal-header button{
       width:auto;
       padding:8px 12px;
     }
+
     .recipe-block{
       white-space:pre-wrap;
       background:#f8fafc;
@@ -289,24 +347,28 @@
           </select>
         </div>
       </div>
+
       <div class="row" style="margin-top:12px;">
         <button id="buildBtn">Luo ruokalistarunko</button>
         <button id="refreshBtn" class="secondary">Päivitä tiedot</button>
       </div>
+
       <div id="settingsStatus"></div>
     </div>
 
     <div class="card">
       <h2>2. Reseptien tuonti</h2>
       <div class="small muted">
-        Kopioi reseptidokumentin koko teksti Google Sheetsin välilehdelle <strong>Tuonti</strong>, soluun <strong>A2</strong>. Paina sitten alla olevaa nappia.
+        Liitä reseptiteksti Google Sheetsin <strong>Tuonti</strong>-välilehden sarakkeeseen A riviltä 2 alaspäin. Teksti saa jakautua monelle riville. Paina sitten alla olevaa nappia.
       </div>
+
       <div class="row" style="margin-top:12px;">
         <button id="importRecipesBtn">Tuo reseptit</button>
         <div class="editor-block">
           <strong>Nykyinen reseptimäärä:</strong> <span id="recipeCount">0</span>
         </div>
       </div>
+
       <div id="importStatus"></div>
     </div>
 
@@ -322,9 +384,11 @@
           <button id="addFoodBtn">Lisää ruokalaji</button>
         </div>
       </div>
+
       <div class="small muted" style="margin-top:8px;">
         Jos samalla nimellä löytyy resepti Reseptit-välilehdeltä, ohjelma linkittää sen automaattisesti ruokalajiin.
       </div>
+
       <div id="addFoodStatus"></div>
     </div>
 
@@ -346,13 +410,16 @@
           <h3>Liitä tageja ruokaan</h3>
           <label for="foodTagEditorSelect">Ruokalaji</label>
           <select id="foodTagEditorSelect"></select>
+
           <label>Valitse tagit</label>
           <div id="foodEditorTagChips" class="chips"></div>
+
           <div style="margin-top:12px;">
             <button id="saveFoodTagsBtn">Tallenna ruoan tagit</button>
           </div>
         </div>
       </div>
+
       <div id="tagEditorStatus"></div>
     </div>
 
@@ -360,11 +427,14 @@
       <h2>5. Ruokalistan suunnittelu</h2>
       <label for="planName">Ruokalistan nimi</label>
       <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
+
       <div id="plannerArea"></div>
+
       <div class="row" style="margin-top:12px;">
         <button id="savePlanBtn">Tallenna ruokalista</button>
         <button id="clearPlanBtn" class="secondary">Tyhjennä valinnat</button>
       </div>
+
       <div id="saveStatus"></div>
     </div>
 
@@ -405,7 +475,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL2akCt_rtEdf3KNHWMKt5kXD45qtc7dkMdSAbMN4cl_F3RqSoLp_fVTsdzx2ctHNC5g/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIrgJVZeWfsYsER4NLGVlLj08-hsdNdAX1VhrQ1qHOJh5CUU9aB2Eiu4TeXuUvSiQCBg/exec';
 
     const state = {
       tags: [],
@@ -475,6 +545,7 @@
       renderPlanner();
       renderCompactWeek();
       renderHistory();
+
       setStatus('settingsStatus', '');
     }
 
@@ -839,6 +910,7 @@
 
     async function importRecipes() {
       setStatus('importStatus', 'Tuodaan reseptejä...');
+
       const result = await apiPost({ action: 'importRecipesFromRaw' });
 
       if (!result.ok) {
@@ -848,6 +920,7 @@
 
       state.foods = result.foods || state.foods;
       document.getElementById('recipeCount').textContent = String(result.recipeCount || 0);
+
       renderFoodEditor();
       renderPlanner();
       renderCompactWeek();
@@ -996,8 +1069,11 @@
     document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
     document.getElementById('importRecipesBtn').addEventListener('click', importRecipes);
     document.getElementById('closeRecipeModalBtn').addEventListener('click', closeRecipeModal);
+
     document.getElementById('recipeModal').addEventListener('click', (e) => {
-      if (e.target.id === 'recipeModal') closeRecipeModal();
+      if (e.target.id === 'recipeModal') {
+        closeRecipeModal();
+      }
     });
 
     document.getElementById('foodTagEditorSelect').addEventListener('change', (e) => {
