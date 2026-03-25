@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mitä tänään syötäisiin</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#d1d5db;
+      --accent:#4f46e5;
+      --accent-soft:#eef2ff;
+      --ok:#166534;
+      --ok-soft:#ecfdf5;
+      --err:#991b1b;
+      --err-soft:#fef2f2;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:820px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:16px;
+      margin-bottom:16px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+    }
+    h1,h2,h3{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    label{
+      display:block;
+      font-weight:700;
+      margin:12px 0 6px;
+    }
+    input, select, button{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:16px;
+      background:#fff;
+    }
+    button{
+      border:none;
+      background:var(--accent);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.secondary{
+      background:#e5e7eb;
+      color:#111827;
+    }
+    button.ghost{
+      background:var(--accent-soft);
+      color:var(--accent);
+    }
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:720px){
+      .row{grid-template-columns:1fr}
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+    .chip{
+      width:auto;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      background:#fff;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .chip.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    .planner-row{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      margin-top:12px;
+      background:#fafafa;
+    }
+    .weekday{
+      font-weight:800;
+      margin-bottom:8px;
+      text-transform:uppercase;
+    }
+    .food-list{
+      max-height:220px;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      margin-top:8px;
+      padding:6px;
+    }
+    .food-item{
+      padding:10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .food-item:hover{
+      background:#f3f4f6;
+    }
+    .selected{
+      margin-top:8px;
+      background:var(--accent-soft);
+      color:#312e81;
+      border-radius:10px;
+      padding:10px;
+      font-weight:700;
+    }
+    .inline{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .status{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+    }
+    .status.ok{
+      background:var(--ok-soft);
+      color:var(--ok);
+    }
+    .status.err{
+      background:var(--err-soft);
+      color:var(--err);
+    }
+    .small{font-size:14px}
+    .history-item{
+      border-top:1px solid var(--line);
+      padding:12px 0;
+    }
+    .history-entry{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:1px dashed #e5e7eb;
+    }
+    .history-entry:last-child{
+      border-bottom:none;
+    }
+    .checkbox{
+      width:auto;
+      transform:scale(1.2);
+    }
+    .tagline{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Mitä tänään syötäisiin</h1>
+      <div class="muted">Ruokalistan suunnittelu puhelimella, tiedot Google Sheetsissä.</div>
+    </div>
+
+    <div class="card">
+      <h2>1. Ruokalistan asetukset</h2>
+
+      <div class="row">
+        <div>
+          <label for="daysCount">Monelleko päivälle?</label>
+          <input id="daysCount" type="number" min="1" max="14" value="7">
+        </div>
+        <div>
+          <label for="startWeekday">Ensimmäinen viikonpäivä</label>
+          <select id="startWeekday">
+            <option value="ma">ma</option>
+            <option value="ti">ti</option>
+            <option value="ke">ke</option>
+            <option value="to">to</option>
+            <option value="pe">pe</option>
+            <option value="la">la</option>
+            <option value="su">su</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Suodata ruokia tagien mukaan</label>
+      <div id="tagChips" class="chips"></div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="buildBtn">Luo ruokalistarunko</button>
+        <button id="refreshBtn" class="secondary">Päivitä tiedot</button>
+      </div>
+
+      <div id="settingsStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Lisää uusi ruokalaji</h2>
+      <label for="newFoodName">Ruokalajin nimi</label>
+      <input id="newFoodName" type="text" placeholder="Esim. Kanawokki">
+
+      <div class="inline" style="margin-top:12px;">
+        <button id="addFoodBtn">Lisää ruokalaji</button>
+      </div>
+
+      <div class="small muted" style="margin-top:8px;">
+        Tässä versiossa uusi ruoka tallennetaan listalle ilman tageja. Tagit voi lisätä myöhemmin Sheetsissä.
+      </div>
+
+      <div id="addFoodStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Ruokalistan suunnittelu</h2>
+      <label for="planName">Ruokalistan nimi</label>
+      <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
+
+      <div id="plannerArea"></div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="savePlanBtn">Tallenna ruokalista</button>
+        <button id="clearPlanBtn" class="secondary">Tyhjennä valinnat</button>
+      </div>
+
+      <div id="saveStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>4. Historia</h2>
+      <div id="historyArea"></div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = 'PAITA_TAHAN_APPS_SCRIPT_WEB_APP_URL';
+
+    const state = {
+      tags: [],
+      foods: [],
+      selectedTags: [],
+      planner: [],
+      weekdays: ['ma', 'ti', 'ke', 'to', 'pe', 'la', 'su'],
+      plans: []
+    };
+
+    function weekdaySequence(start, count) {
+      const startIndex = state.weekdays.indexOf(start);
+      const result = [];
+      for (let i = 0; i < count; i++) {
+        result.push(state.weekdays[(startIndex + i) % 7]);
+      }
+      return result;
+    }
+
+    async function apiGet(action, params = {}) {
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.set('action', action);
+      for (const [k, v] of Object.entries(params)) {
+        url.searchParams.set(k, v);
+      }
+      const res = await fetch(url.toString());
+      return res.json();
+    }
+
+    async function apiPost(payload) {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    }
+
+    function setStatus(elId, text, ok = true) {
+      const el = document.getElementById(elId);
+      if (!text) {
+        el.innerHTML = '';
+        return;
+      }
+      el.innerHTML = `<div class="status ${ok ? 'ok' : 'err'}">${escapeHtml(text)}</div>`;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderTags() {
+      const wrap = document.getElementById('tagChips');
+      wrap.innerHTML = '';
+
+      state.tags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'chip' + (state.selectedTags.includes(tag) ? ' active' : '');
+        btn.textContent = tag;
+        btn.onclick = async () => {
+          if (state.selectedTags.includes(tag)) {
+            state.selectedTags = state.selectedTags.filter(t => t !== tag);
+          } else {
+            state.selectedTags.push(tag);
+          }
+          renderTags();
+          await reloadFoods();
+          renderPlanner();
+        };
+        wrap.appendChild(btn);
+      });
+    }
+
+    async function reloadFoods() {
+      const result = await apiGet('foods', {
+        tags: state.selectedTags.join(',')
+      });
+
+      if (!result.ok) {
+        setStatus('settingsStatus', result.error || 'Ruokien haku epäonnistui', false);
+        return;
+      }
+
+      state.foods = result.foods || [];
+    }
+
+    async function loadInit() {
+      setStatus('settingsStatus', 'Ladataan tietoja...', true);
+
+      const result = await apiGet('init');
+      if (!result.ok) {
+        setStatus('settingsStatus', result.error || 'Alustus epäonnistui', false);
+        return;
+      }
+
+      state.tags = result.tags || [];
+      state.foods = result.foods || [];
+      state.plans = result.recentPlans || [];
+
+      renderTags();
+      renderPlanner();
+      renderHistory();
+      setStatus('settingsStatus', '');
+    }
+
+    function buildPlanner() {
+      const daysCount = Math.max(1, Math.min(14, Number(document.getElementById('daysCount').value || 7)));
+      const startWeekday = document.getElementById('startWeekday').value;
+      const seq = weekdaySequence(startWeekday, daysCount);
+
+      state.planner = seq.map((weekday, i) => ({
+        sequence: i + 1,
+        weekday,
+        foodId: '',
+        foodName: '',
+        tags: [],
+        eaten: false
+      }));
+
+      renderPlanner();
+      setStatus('saveStatus', '');
+    }
+
+    function renderPlanner() {
+      const area = document.getElementById('plannerArea');
+
+      if (!state.planner.length) {
+        area.innerHTML = '<div class="muted">Luo ensin ruokalistarunko.</div>';
+        return;
+      }
+
+      area.innerHTML = '';
+
+      state.planner.forEach((row, rowIndex) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'planner-row';
+
+        const selectedText = row.foodName
+          ? `<div class="selected">Valittu: ${escapeHtml(row.foodName)}</div>`
+          : '';
+
+        const foodsHtml = state.foods.map(food => {
+          const tagsText = food.tags.length ? ` <span class="tagline">(${escapeHtml(food.tags.join(', '))})</span>` : '';
+          return `<div class="food-item" data-row="${rowIndex}" data-food-id="${escapeHtml(food.id)}" data-food-name="${escapeHtml(food.name)}" data-food-tags="${escapeHtml(JSON.stringify(food.tags))}">
+                    <strong>${escapeHtml(food.name)}</strong>${tagsText}
+                  </div>`;
+        }).join('');
+
+        wrapper.innerHTML = `
+          <div class="weekday">${escapeHtml(row.weekday)}</div>
+
+          <label>Valitse listalta</label>
+          <div class="food-list">${foodsHtml || '<div class="muted">Ei ruokalajeja tällä suodatuksella.</div>'}</div>
+
+          <label>Käsin kirjoitettu vaihtoehto</label>
+          <div class="row">
+            <input type="text" placeholder="Kirjoita ruokalaji" id="manualFood_${rowIndex}">
+            <button class="ghost" data-manual-row="${rowIndex}">Käytä tätä</button>
+          </div>
+
+          ${selectedText}
+        `;
+
+        area.appendChild(wrapper);
+      });
+
+      document.querySelectorAll('.food-item').forEach(el => {
+        el.onclick = () => {
+          const rowIndex = Number(el.dataset.row);
+          const foodId = el.dataset.foodId;
+          const foodName = el.dataset.foodName;
+          const foodTags = JSON.parse(el.dataset.foodTags || '[]');
+
+          state.planner[rowIndex].foodId = foodId;
+          state.planner[rowIndex].foodName = foodName;
+          state.planner[rowIndex].tags = foodTags;
+          renderPlanner();
+        };
+      });
+
+      document.querySelectorAll('[data-manual-row]').forEach(btn => {
+        btn.onclick = () => {
+          const rowIndex = Number(btn.dataset.manualRow);
+          const input = document.getElementById(`manualFood_${rowIndex}`);
+          const value = (input.value || '').trim();
+          if (!value) {
+            setStatus('saveStatus', 'Kirjoita ruokalaji ennen valintaa.', false);
+            return;
+          }
+
+          state.planner[rowIndex].foodId = '';
+          state.planner[rowIndex].foodName = value;
+          state.planner[rowIndex].tags = [];
+          renderPlanner();
+          setStatus('saveStatus', '');
+        };
+      });
+    }
+
+    async function addFood() {
+      const foodName = (document.getElementById('newFoodName').value || '').trim();
+      if (!foodName) {
+        setStatus('addFoodStatus', 'Kirjoita ruokalajin nimi.', false);
+        return;
+      }
+
+      setStatus('addFoodStatus', 'Tallennetaan ruokalajia...', true);
+
+      const result = await apiPost({
+        action: 'addFood',
+        foodName,
+        tags: [],
+        saveNewTags: false
+      });
+
+      if (!result.ok) {
+        setStatus('addFoodStatus', result.error || 'Ruokalajin lisäys epäonnistui', false);
+        return;
+      }
+
+      document.getElementById('newFoodName').value = '';
+      state.foods = result.foods || state.foods;
+      state.tags = result.tags || state.tags;
+
+      renderTags();
+      renderPlanner();
+      setStatus('addFoodStatus', 'Ruokalaji lisätty.');
+    }
+
+    async function savePlan() {
+      if (!state.planner.length) {
+        setStatus('saveStatus', 'Luo ensin ruokalistarunko.', false);
+        return;
+      }
+
+      const missing = state.planner.find(r => !r.foodName);
+      if (missing) {
+        setStatus('saveStatus', `Päivältä ${missing.weekday} puuttuu ruokalaji.`, false);
+        return;
+      }
+
+      const planName = (document.getElementById('planName').value || '').trim();
+
+      setStatus('saveStatus', 'Tallennetaan ruokalistaa...', true);
+
+      const result = await apiPost({
+        action: 'savePlan',
+        planName,
+        entries: state.planner
+      });
+
+      if (!result.ok) {
+        setStatus('saveStatus', result.error || 'Tallennus epäonnistui', false);
+        return;
+      }
+
+      state.plans = result.plans || [];
+      renderHistory();
+      setStatus('saveStatus', 'Ruokalista tallennettu.');
+    }
+
+    async function refreshPlans() {
+      const result = await apiGet('plans', { limit: 10 });
+      if (!result.ok) return;
+      state.plans = result.plans || [];
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const area = document.getElementById('historyArea');
+
+      if (!state.plans.length) {
+        area.innerHTML = '<div class="muted">Ei vielä tallennettuja ruokalistoja.</div>';
+        return;
+      }
+
+      area.innerHTML = state.plans.map(plan => {
+        const created = new Date(plan.createdAt);
+        const createdText = isNaN(created.getTime())
+          ? ''
+          : created.toLocaleString('fi-FI');
+
+        const entries = (plan.entries || []).map(entry => `
+          <div class="history-entry">
+            <div>
+              <strong>${escapeHtml(entry.weekday)}</strong>: ${escapeHtml(entry.foodName)}
+              ${entry.tags && entry.tags.length ? `<div class="tagline">${escapeHtml(entry.tags.join(', '))}</div>` : ''}
+            </div>
+            <div>
+              <label class="inline">
+                <input class="checkbox history-check"
+                       type="checkbox"
+                       data-plan-id="${escapeHtml(plan.planId)}"
+                       data-sequence="${escapeHtml(entry.sequence)}"
+                       ${entry.eaten ? 'checked' : ''}>
+                <span>Syöty</span>
+              </label>
+            </div>
+          </div>
+        `).join('');
+
+        return `
+          <div class="history-item">
+            <div><strong>${escapeHtml(plan.planName)}</strong></div>
+            <div class="tagline">Tallennettu: ${escapeHtml(createdText)}</div>
+            <div style="margin-top:8px;">${entries}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.history-check').forEach(el => {
+        el.onchange = async () => {
+          const planId = el.dataset.planId;
+          const sequence = Number(el.dataset.sequence);
+          const eaten = el.checked;
+
+          const result = await apiPost({
+            action: 'toggleEaten',
+            planId,
+            sequence,
+            eaten
+          });
+
+          if (!result.ok) {
+            setStatus('saveStatus', result.error || 'Syöty-merkinnän päivitys epäonnistui', false);
+            await refreshPlans();
+            return;
+          }
+
+          state.plans = result.plans || [];
+          renderHistory();
+        };
+      });
+    }
+
+    function clearPlanner() {
+      state.planner = state.planner.map(r => ({
+        ...r,
+        foodId: '',
+        foodName: '',
+        tags: [],
+        eaten: false
+      }));
+      renderPlanner();
+      setStatus('saveStatus', '');
+    }
+
+    document.getElementById('buildBtn').addEventListener('click', buildPlanner);
+    document.getElementById('refreshBtn').addEventListener('click', loadInit);
+    document.getElementById('addFoodBtn').addEventListener('click', addFood);
+    document.getElementById('savePlanBtn').addEventListener('click', savePlan);
+    document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
+
+    loadInit();
+  </script>
+</body>
+</html>
