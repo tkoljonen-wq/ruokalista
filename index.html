@@ -850,8 +850,8 @@
               <div class="weekday">${escapeHtml(row.weekday)}</div>
             </div>
             <div class="move-buttons">
-              <button type="button" class="ghost move-up-btn" data-move-up="${rowIndex}" aria-label="Siirrä ylemmäs" ${rowIndex === 0 ? 'disabled' : ''}>↑ Ylös</button>
-              <button type="button" class="ghost move-down-btn" data-move-down="${rowIndex}" aria-label="Siirrä alemmas" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Alas</button>
+              <button type="button" class="ghost move-up-btn" onclick="movePlannerRow(${rowIndex}, ${rowIndex - 1})" aria-label="Siirrä ylemmäs" ${rowIndex === 0 ? 'disabled' : ''}>↑ Ylös</button>
+              <button type="button" class="ghost move-down-btn" onclick="movePlannerRow(${rowIndex}, ${rowIndex + 1})" aria-label="Siirrä alemmas" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Alas</button>
             </div>
           </div>
 
@@ -929,20 +929,6 @@
           renderPlanner();
           renderCompactWeek();
           setStatus('saveStatus', '');
-        };
-      });
-
-      document.querySelectorAll('[data-move-up]').forEach(btn => {
-        btn.onclick = () => {
-          const rowIndex = Number(btn.dataset.moveUp);
-          movePlannerRow(rowIndex, rowIndex - 1);
-        };
-      });
-
-      document.querySelectorAll('[data-move-down]').forEach(btn => {
-        btn.onclick = () => {
-          const rowIndex = Number(btn.dataset.moveDown);
-          movePlannerRow(rowIndex, rowIndex + 1);
         };
       });
 
