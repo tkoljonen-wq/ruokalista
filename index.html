@@ -167,12 +167,31 @@
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      margin-top:8px;
     }
 
     .move-buttons button{
       width:auto;
-      padding:9px 12px;
+      padding:10px 14px;
       font-size:14px;
+      min-height:42px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .planner-controls-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:8px 0 10px;
+    }
+
+    .planner-controls-row .secondary{
+      width:auto;
+      min-height:42px;
+      padding:10px 14px;
+      font-weight:700;
     }
 
     .weekday{
@@ -849,10 +868,11 @@
               <div class="planner-number">${rowIndex + 1}</div>
               <div class="weekday">${escapeHtml(row.weekday)}</div>
             </div>
-            <div class="move-buttons">
-              <button type="button" class="ghost move-up-btn" onclick="movePlannerRow(${rowIndex}, ${rowIndex - 1})" aria-label="Siirrä ylemmäs" ${rowIndex === 0 ? 'disabled' : ''}>↑ Ylös</button>
-              <button type="button" class="ghost move-down-btn" onclick="movePlannerRow(${rowIndex}, ${rowIndex + 1})" aria-label="Siirrä alemmas" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Alas</button>
-            </div>
+          </div>
+
+          <div class="planner-controls-row">
+            <button type="button" class="secondary" onclick="movePlannerRow(${rowIndex}, ${rowIndex - 1})" ${rowIndex === 0 ? 'disabled' : ''}>↑ Siirrä ylemmäs</button>
+            <button type="button" class="secondary" onclick="movePlannerRow(${rowIndex}, ${rowIndex + 1})" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Siirrä alemmas</button>
           </div>
 
           <label>Tämän päivän tagisuodatus</label>
