@@ -1744,7 +1744,6 @@
         container.insertBefore(targetCard, card);
       }
 
-      applySavedSectionOrder();
       refreshSectionHeadings();
       saveSectionOrder();
       window.scrollTo({ top: Math.max(card.getBoundingClientRect().top + window.scrollY - 20, 0), behavior: 'smooth' });
