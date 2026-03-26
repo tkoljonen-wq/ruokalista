@@ -722,12 +722,15 @@
 
       <div class="row" style="margin-top:12px;">
         <button id="buildShoppingListBtn" class="ghost">Luo ostoslista</button>
-        <button id="copyShoppingListBtn" class="secondary">Kopioi lista leikepöydälle</button>
+        <button id="writeShoppingListBtn" class="secondary">Kirjoita ostoslistataulukkoon</button>
       </div>
 
       <div class="shopping-list-box">
         <h3 style="margin-bottom:8px;">Ostoslista</h3>
-        <div class="small muted">Lista muodostetaan nykyisen ruokalistasuunnitelman reseptien ainesosista. Voit muokata rivejä ja poistaa tuotteita ennen kopiointia.</div>
+        <div class="small muted">Lista muodostetaan nykyisen ruokalistasuunnitelman reseptien ainesosista. Voit muokata rivejä ja poistaa tuotteita ennen lähetystä.</div>
+        <label for="shoppingTargetUrl" style="margin-top:12px;">Ostoslista-web app URL</label>
+        <input id="shoppingTargetUrl" type="text" placeholder="Liitä ostoslistaohjelman Apps Script web app URL tähän">
+        <div class="small muted" style="margin-top:8px;">Ohjelma kirjoittaa tuotteet toisen taulukon ensimmäisen välilehden sarakkeeseen A alkaen solusta A2.</div>
         <div id="shoppingListMeta" class="shopping-list-meta"></div>
         <div id="shoppingListArea" class="shopping-list-items"></div>
         <div id="shoppingListEmpty" class="shopping-list-empty">Ostoslista ilmestyy tähän, kun painat “Luo ostoslista”.</div>
@@ -816,7 +819,10 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznsepZbfoN_ftmtf59rtlCP4NJnkXvwbyJXgpGKq6_ksA-anUHjt3CPeLnSPErF037cg/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIc28OBaQFYpMXe3I5p4XDmFyQRA4LIH5fccTKTz_qtxrSJOmhVK8uW52DlQV7w0kHkg/exec';
+
+    const SHOPPING_TARGET_SPREADSHEET_ID_STORAGE_KEY = 'mita-tanaan-syotaisiin-shopping-target-spreadsheet-id-v1';
+    const SHOPPING_TARGET_SHEET_NAME_STORAGE_KEY = 'mita-tanaan-syotaisiin-shopping-target-sheet-name-v1';
 
     const state = {
       tags: [],
@@ -860,6 +866,15 @@
 
     async function apiPost(payload) {
       const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    }
+
+    async function apiPostTo(url, payload) {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
@@ -1656,7 +1671,37 @@
       setShoppingListStatus('Ostoslista luotu.');
     }
 
-    async function copyShoppingListToClipboard() {
+    function getShoppingTargetUrl() {
+      return (document.getElementById('shoppingTargetUrl').value || '').trim();
+    }
+
+    function saveShoppingTargetUrl() {
+      try {
+        localStorage.setItem(SHOPPING_TARGET_URL_STORAGE_KEY, getShoppingTargetUrl());
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function loadShoppingTargetUrl() {
+      const input = document.getElementById('shoppingTargetUrl');
+      if (!input) return;
+      try {
+        const saved = localStorage.getItem(SHOPPING_TARGET_URL_STORAGE_KEY) || '';
+        input.value = saved;
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    async function writeShoppingListToSheet() {
+      const targetSpreadsheetId = getShoppingTargetSpreadsheetId();
+      const targetSheetName = getShoppingTargetSheetName();
+      if (!targetSpreadsheetId) {
+        setShoppingListStatus('Lisää ensin ostoslistataulukon Spreadsheet ID.', false);
+        return;
+      }
+
       const cleaned = state.shoppingListItems
         .map(item => String(item || '').trim())
         .filter(Boolean);
@@ -1666,32 +1711,30 @@
         return;
       }
 
-      const text = cleaned.join('\n');
+      setShoppingListStatus('Kirjoitetaan ostoslistaa taulukkoon...');
+      saveShoppingTargetSettings();
 
       try {
-        await navigator.clipboard.writeText(text);
-        setShoppingListStatus('Ostoslista kopioitu leikepöydälle.');
-      } catch (err) {
-        try {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          ta.setAttribute('readonly', '');
-          ta.style.position = 'fixed';
-          ta.style.opacity = '0';
-          document.body.appendChild(ta);
-          ta.focus();
-          ta.select();
-          const ok = document.execCommand('copy');
-          document.body.removeChild(ta);
-          if (!ok) throw new Error('copy failed');
-          setShoppingListStatus('Ostoslista kopioitu leikepöydälle.');
-        } catch (err2) {
-          setShoppingListStatus('Kopiointi epäonnistui tässä selaimessa.', false);
+        const result = await apiPost({
+          action: 'writeShoppingListToExternalSheet',
+          spreadsheetId: targetSpreadsheetId,
+          sheetName: targetSheetName,
+          items: cleaned
+        });
+
+        if (!result || !result.ok) {
+          setShoppingListStatus((result && result.error) || 'Kirjoitus ostoslistataulukkoon epäonnistui.', false);
+          return;
         }
+
+        setShoppingListStatus(`Ostoslista kirjoitettu taulukkoon. Rivejä: ${result.count || cleaned.length}.`);
+      } catch (err) {
+        setShoppingListStatus('Kirjoitus ostoslistataulukkoon epäonnistui.', false);
       }
     }
 
     function addEmptyShoppingListRow() {
+
       state.shoppingListItems.push('');
       renderShoppingList();
       setShoppingListStatus('');
@@ -1905,9 +1948,10 @@
     document.getElementById('savePlanBtn').addEventListener('click', savePlan);
     document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
     document.getElementById('buildShoppingListBtn').addEventListener('click', buildShoppingList);
-    document.getElementById('copyShoppingListBtn').addEventListener('click', copyShoppingListToClipboard);
+    document.getElementById('writeShoppingListBtn').addEventListener('click', writeShoppingListToSheet);
     document.getElementById('addShoppingItemBtn').addEventListener('click', addEmptyShoppingListRow);
     document.getElementById('clearShoppingListBtn').addEventListener('click', clearShoppingList);
+    document.getElementById('shoppingTargetUrl').addEventListener('change', saveShoppingTargetUrl);
 
     document.getElementById('recipeSearchInput').addEventListener('input', (e) => {
       state.recipeSearch = e.target.value || '';
@@ -1941,6 +1985,7 @@
       renderFoodEditorTags();
     });
 
+    loadShoppingTargetUrl();
     loadInit();
     const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-manual-v1';
     const DEFAULT_SECTION_ORDER = ['settings','import','recipes','new-food','tags','planner','compact-week','history'];
