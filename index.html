@@ -441,24 +441,43 @@
 
 
     <div class="card">
-      <h2>3. Reseptien hallinta</h2>
-      <div class="row">
+      <h2>3. Reseptit</h2>
+      <div class="row" style="align-items:end;">
         <div>
-          <label for="recipeSearchInput">Hae reseptiä</label>
-          <input id="recipeSearchInput" type="text" placeholder="Kirjoita reseptin nimi">
+          <div class="small muted">Reseptien hallinta avautuu erikseen napin takaa, jotta etusivu pysyy lyhyempänä.</div>
         </div>
         <div>
-          <label>&nbsp;</label>
-          <button id="refreshRecipesBtn" class="secondary">Päivitä reseptilista</button>
+          <button id="toggleRecipeManagerBtn" class="secondary">Reseptien hallinta</button>
         </div>
       </div>
 
-      <div class="small muted" style="margin-top:8px;">
-        Muokkauksessa resepti säilyy samana tietueena. Passivointi poistaa reseptin aktiivikäytöstä ja irrottaa sen ruokalajeista, mutta säilyttää sen taulukossa.
-      </div>
+      <div id="recipeManagerPanel" style="display:none; margin-top:14px;">
+        <div class="row">
+          <div>
+            <label for="recipeSearchInput">Hae reseptiä</label>
+            <input id="recipeSearchInput" type="text" placeholder="Kirjoita reseptin nimi">
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="createRecipeBtn">Uusi resepti</button>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="toggleInactiveRecipesBtn" class="secondary">Näytä passivoidut</button>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="refreshRecipesBtn" class="secondary">Päivitä reseptilista</button>
+          </div>
+        </div>
 
-      <div id="recipeManagerStatus"></div>
-      <div id="recipeManagerList" class="recipe-list"></div>
+        <div class="small muted" style="margin-top:8px;">
+          Muokkauksessa resepti säilyy samana tietueena. Passivointi poistaa reseptin aktiivikäytöstä ja irrottaa sen ruokalajeista, mutta säilyttää sen taulukossa.
+        </div>
+
+        <div id="recipeManagerStatus"></div>
+        <div id="recipeManagerList" class="recipe-list"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -550,6 +569,7 @@
 
       <div class="modal-actions">
         <button id="editRecipeBtn" class="ghost">Muokkaa</button>
+        <button id="restoreRecipeBtn" class="secondary" style="display:none;">Palauta aktiiviseksi</button>
         <button id="archiveRecipeBtn" class="danger">Passivoi resepti</button>
       </div>
 
@@ -593,7 +613,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwG_kYohcbmq3GR3fKiTeAaYetj0YOduQkaNib2IMtv_jo9DX6Gj1NX_gm-2Fi5YImKxg/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyloo0QqjgFWflp4aH39LZyhOQp3ZOmHrqnsvVvj3yER3zsdXI-O2U1s5pazH-4IeCGMQ/exec';
 
     const state = {
       tags: [],
@@ -606,7 +626,10 @@
       editorSelectedTags: [],
       recipeSearch: '',
       currentRecipe: null,
-      modalMode: 'view'
+      modalMode: 'view',
+      recipeManagerOpen: false,
+      includeInactiveRecipes: false,
+      isCreatingRecipe: false
     };
 
     function escapeHtml(str) {
@@ -664,6 +687,7 @@
       state.plans = result.recentPlans || [];
       document.getElementById('recipeCount').textContent = String(result.recipeCount || 0);
 
+      syncRecipeManagerUi();
       renderRecipeManager();
       renderFoodEditor();
       renderPlanner();
@@ -863,9 +887,20 @@
       return parts.join(' • ');
     }
 
+    function syncRecipeManagerUi() {
+      const panel = document.getElementById('recipeManagerPanel');
+      const toggleBtn = document.getElementById('toggleRecipeManagerBtn');
+      const inactiveBtn = document.getElementById('toggleInactiveRecipesBtn');
+      if (panel) panel.style.display = state.recipeManagerOpen ? '' : 'none';
+      if (toggleBtn) toggleBtn.textContent = state.recipeManagerOpen ? 'Sulje reseptien hallinta' : 'Reseptien hallinta';
+      if (inactiveBtn) inactiveBtn.textContent = state.includeInactiveRecipes ? 'Piilota passivoidut' : 'Näytä passivoidut';
+    }
+
     function renderRecipeManager() {
+      syncRecipeManagerUi();
+
       const area = document.getElementById('recipeManagerList');
-      if (!area) return;
+      if (!area || !state.recipeManagerOpen) return;
 
       const term = (state.recipeSearch || '').trim().toLowerCase();
       const filtered = state.recipes.filter(recipe => {
@@ -876,7 +911,7 @@
       document.getElementById('recipeCount').textContent = String(state.recipes.length || 0);
 
       if (!filtered.length) {
-        area.innerHTML = '<div class="recipe-empty">Hakuehdolla ei löytynyt aktiivisia reseptejä.</div>';
+        area.innerHTML = `<div class="recipe-empty">${state.includeInactiveRecipes ? 'Hakuehdolla ei löytynyt reseptejä.' : 'Hakuehdolla ei löytynyt aktiivisia reseptejä.'}</div>`;
         return;
       }
 
@@ -889,6 +924,7 @@
           <div class="recipe-list-actions">
             <button class="ghost open-recipe-btn" data-recipe-id="${escapeHtml(recipe.recipeId || '')}">Avaa</button>
             <button class="secondary quick-edit-recipe-btn" data-recipe-id="${escapeHtml(recipe.recipeId || '')}">Muokkaa</button>
+            ${recipe.active === false ? `<button class="secondary restore-recipe-btn" data-recipe-id="${escapeHtml(recipe.recipeId || '')}">Palauta</button>` : ''}
           </div>
         </div>
       `).join('');
@@ -904,14 +940,22 @@
           await openRecipeById(btn.dataset.recipeId, 'edit');
         };
       });
+
+      document.querySelectorAll('.restore-recipe-btn').forEach(btn => {
+        btn.onclick = async () => {
+          await restoreRecipe(btn.dataset.recipeId || '');
+        };
+      });
     }
 
     function setRecipeModalMode(mode) {
       state.modalMode = mode === 'edit' ? 'edit' : 'view';
       document.getElementById('recipeViewMode').style.display = state.modalMode === 'view' ? '' : 'none';
       document.getElementById('recipeEditMode').style.display = state.modalMode === 'edit' ? '' : 'none';
-      document.getElementById('editRecipeBtn').style.display = state.modalMode === 'view' ? '' : 'none';
-      document.getElementById('archiveRecipeBtn').style.display = state.currentRecipe ? '' : 'none';
+      document.getElementById('editRecipeBtn').style.display = (!state.isCreatingRecipe && state.modalMode === 'view') ? '' : 'none';
+      document.getElementById('archiveRecipeBtn').style.display = (state.currentRecipe && !state.isCreatingRecipe && state.currentRecipe.active !== false) ? '' : 'none';
+      document.getElementById('restoreRecipeBtn').style.display = (state.currentRecipe && !state.isCreatingRecipe && state.currentRecipe.active === false) ? '' : 'none';
+      document.getElementById('saveRecipeBtn').textContent = state.isCreatingRecipe ? 'Luo resepti' : 'Tallenna muutokset';
     }
 
     function populateRecipeModal(recipe) {
@@ -929,6 +973,23 @@
       document.getElementById('editRecipeNotes').value = recipe.notes || '';
     }
 
+    function startCreateRecipe() {
+      state.isCreatingRecipe = true;
+      populateRecipeModal({
+        recipeId: '',
+        name: '',
+        ingredients: '',
+        instructions: '',
+        notes: '',
+        source: 'Lisätty käyttöliittymässä',
+        active: true
+      });
+      document.getElementById('recipeModalTitle').textContent = 'Uusi resepti';
+      document.getElementById('recipeModalMeta').textContent = 'Täytä reseptin tiedot';
+      setRecipeModalMode('edit');
+      document.getElementById('recipeModal').classList.add('open');
+    }
+
     async function openRecipeById(recipeId, mode = 'view') {
       const result = await apiGet('recipe', { recipeId: recipeId || '' });
 
@@ -942,13 +1003,14 @@
         return;
       }
 
+      state.isCreatingRecipe = false;
       populateRecipeModal(result.recipe);
       setRecipeModalMode(mode);
       document.getElementById('recipeModal').classList.add('open');
     }
 
     async function refreshRecipes() {
-      const result = await apiGet('recipes');
+      const result = await apiGet('recipes', { includeInactive: state.includeInactiveRecipes ? 'true' : 'false' });
 
       if (!result.ok) {
         setStatus('recipeManagerStatus', result.error || 'Reseptilistan päivitys epäonnistui', false);
@@ -961,6 +1023,38 @@
     }
 
     async function saveRecipeEdits() {
+      const payload = {
+        name: (document.getElementById('editRecipeName').value || '').trim(),
+        source: (document.getElementById('editRecipeSource').value || '').trim(),
+        ingredients: document.getElementById('editRecipeIngredients').value || '',
+        instructions: document.getElementById('editRecipeInstructions').value || '',
+        notes: document.getElementById('editRecipeNotes').value || ''
+      };
+
+      if (state.isCreatingRecipe) {
+        setStatus('recipeManagerStatus', 'Luodaan reseptiä...');
+        const result = await apiPost({ action: 'createRecipe', ...payload });
+
+        if (!result.ok) {
+          setStatus('recipeManagerStatus', result.error || 'Reseptin luonti epäonnistui', false);
+          return;
+        }
+
+        state.recipes = result.recipes || state.recipes;
+        state.foods = result.foods || state.foods;
+        document.getElementById('recipeCount').textContent = String(result.recipeCount || state.recipes.length || 0);
+        state.isCreatingRecipe = false;
+        populateRecipeModal(result.result);
+        setRecipeModalMode('view');
+        renderRecipeManager();
+        renderFoodEditor();
+        renderPlanner();
+        renderCompactWeek();
+        renderHistory();
+        setStatus('recipeManagerStatus', 'Resepti luotu.');
+        return;
+      }
+
       if (!state.currentRecipe || !state.currentRecipe.recipeId) {
         setStatus('recipeManagerStatus', 'Avaa ensin resepti muokattavaksi.', false);
         return;
@@ -971,11 +1065,7 @@
       const result = await apiPost({
         action: 'updateRecipe',
         recipeId: state.currentRecipe.recipeId,
-        name: (document.getElementById('editRecipeName').value || '').trim(),
-        source: (document.getElementById('editRecipeSource').value || '').trim(),
-        ingredients: document.getElementById('editRecipeIngredients').value || '',
-        instructions: document.getElementById('editRecipeInstructions').value || '',
-        notes: document.getElementById('editRecipeNotes').value || ''
+        ...payload
       });
 
       if (!result.ok) {
@@ -1013,7 +1103,8 @@
 
       const result = await apiPost({
         action: 'archiveRecipe',
-        recipeId: state.currentRecipe.recipeId
+        recipeId: state.currentRecipe.recipeId,
+        includeInactive: state.includeInactiveRecipes
       });
 
       if (!result.ok) {
@@ -1035,7 +1126,46 @@
       setStatus('recipeManagerStatus', 'Resepti passivoitu.');
     }
 
+    async function restoreRecipe(recipeId) {
+      const targetId = recipeId || (state.currentRecipe && state.currentRecipe.recipeId) || '';
+      if (!targetId) {
+        setStatus('recipeManagerStatus', 'Reseptiä ei löytynyt palautusta varten.', false);
+        return;
+      }
+
+      setStatus('recipeManagerStatus', 'Palautetaan reseptiä aktiiviseksi...');
+
+      const result = await apiPost({
+        action: 'restoreRecipe',
+        recipeId: targetId,
+        includeInactive: state.includeInactiveRecipes
+      });
+
+      if (!result.ok) {
+        setStatus('recipeManagerStatus', result.error || 'Reseptin palautus epäonnistui', false);
+        return;
+      }
+
+      state.recipes = result.recipes || state.recipes;
+      state.foods = result.foods || state.foods;
+      document.getElementById('recipeCount').textContent = String(result.recipeCount || state.recipes.length || 0);
+
+      if (state.currentRecipe && state.currentRecipe.recipeId === targetId && result.result) {
+        state.isCreatingRecipe = false;
+        populateRecipeModal(result.result);
+        setRecipeModalMode('view');
+      }
+
+      renderRecipeManager();
+      renderFoodEditor();
+      renderPlanner();
+      renderCompactWeek();
+      renderHistory();
+      setStatus('recipeManagerStatus', 'Resepti palautettu aktiiviseksi.');
+    }
+
     async function addFood() {
+
       const foodName = (document.getElementById('newFoodName').value || '').trim();
 
       if (!foodName) {
@@ -1342,6 +1472,7 @@
 
     function closeRecipeModal() {
       document.getElementById('recipeModal').classList.remove('open');
+      state.isCreatingRecipe = false;
     }
 
     function clearPlanner() {
@@ -1363,8 +1494,23 @@
 
     document.getElementById('buildBtn').addEventListener('click', buildPlanner);
     document.getElementById('refreshBtn').addEventListener('click', loadInit);
+    document.getElementById('toggleRecipeManagerBtn').addEventListener('click', async () => {
+      state.recipeManagerOpen = !state.recipeManagerOpen;
+      syncRecipeManagerUi();
+      if (state.recipeManagerOpen) {
+        await refreshRecipes();
+      }
+    });
     document.getElementById('importRecipesBtn').addEventListener('click', importRecipes);
     document.getElementById('refreshRecipesBtn').addEventListener('click', refreshRecipes);
+    document.getElementById('createRecipeBtn').addEventListener('click', startCreateRecipe);
+    document.getElementById('toggleInactiveRecipesBtn').addEventListener('click', async () => {
+      state.includeInactiveRecipes = !state.includeInactiveRecipes;
+      syncRecipeManagerUi();
+      if (state.recipeManagerOpen) {
+        await refreshRecipes();
+      }
+    });
     document.getElementById('addFoodBtn').addEventListener('click', addFood);
     document.getElementById('addTagBtn').addEventListener('click', addTag);
     document.getElementById('saveFoodTagsBtn').addEventListener('click', saveFoodTags);
@@ -1376,19 +1522,18 @@
       renderRecipeManager();
     });
 
-    document.getElementById('editRecipeBtn').addEventListener('click', () => {
-      if (!state.currentRecipe) return;
-      setRecipeModalMode('edit');
-    });
-
+    document.getElementById('editRecipeBtn').addEventListener('click', () => setRecipeModalMode('edit'));
     document.getElementById('cancelRecipeEditBtn').addEventListener('click', () => {
-      if (!state.currentRecipe) return;
-      populateRecipeModal(state.currentRecipe);
+      if (state.currentRecipe) populateRecipeModal(state.currentRecipe);
+      if (state.isCreatingRecipe && state.currentRecipe && !state.currentRecipe.recipeId) {
+        closeRecipeModal();
+        return;
+      }
       setRecipeModalMode('view');
     });
-
     document.getElementById('saveRecipeBtn').addEventListener('click', saveRecipeEdits);
     document.getElementById('archiveRecipeBtn').addEventListener('click', archiveCurrentRecipe);
+    document.getElementById('restoreRecipeBtn').addEventListener('click', () => restoreRecipe());
     document.getElementById('closeRecipeModalBtn').addEventListener('click', closeRecipeModal);
 
     document.getElementById('recipeModal').addEventListener('click', (e) => {
