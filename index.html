@@ -467,6 +467,13 @@
       justify-content:center;
     }
 
+
+    .section-order-status{
+      margin-top:8px;
+      font-size:14px;
+      color:var(--muted);
+    }
+
   </style>
 </head>
 <body>
@@ -1661,23 +1668,34 @@
     });
 
     loadInit();
+    initSectionOrdering();
   
 
-    const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-v1';
+    const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-v7';
 
-    function saveSectionOrder() {
-      const sectionCards = Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'));
-      const order = sectionCards
+    function setSectionOrderStatus(message, ok = true) {
+      const el = document.getElementById('sectionOrderStatus');
+      if (!el) return;
+      el.textContent = message || '';
+      el.style.color = ok ? 'var(--ok)' : 'var(--err)';
+    }
+
+    function getCurrentSectionOrder() {
+      return Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'))
         .map(card => {
           const h2 = card.querySelector('h2[data-section-key]');
           return h2 ? h2.dataset.sectionKey : '';
         })
         .filter(Boolean);
+    }
 
+    function saveSectionOrderToLocalStorage() {
       try {
+        const order = getCurrentSectionOrder();
         localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(order));
+        setSectionOrderStatus('Uusi järjestys tallennettu selaimeen.', true);
       } catch (e) {
-        // Selaimen tallennus ei ole käytettävissä.
+        setSectionOrderStatus('Järjestyksen tallennus epäonnistui tässä selaimessa.', false);
       }
     }
 
@@ -1686,6 +1704,7 @@
       try {
         raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
       } catch (e) {
+        setSectionOrderStatus('Tallennettua järjestystä ei voitu lukea selaimesta.', false);
         return;
       }
       if (!raw) return;
@@ -1694,6 +1713,7 @@
       try {
         savedOrder = JSON.parse(raw);
       } catch (e) {
+        setSectionOrderStatus('Tallennettu järjestys oli virheellinen.', false);
         return;
       }
       if (!Array.isArray(savedOrder) || !savedOrder.length) return;
@@ -1707,14 +1727,33 @@
         if (h2 && h2.dataset.sectionKey) cardsByKey.set(h2.dataset.sectionKey, card);
       });
 
-      const orderedCards = savedOrder.map(key => cardsByKey.get(key)).filter(Boolean);
-      const currentCards = Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]'));
-      const missingCards = currentCards.filter(card => {
+      const ordered = savedOrder.map(key => cardsByKey.get(key)).filter(Boolean);
+      const missing = Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).filter(card => {
         const h2 = card.querySelector('h2[data-section-key]');
         return !h2 || !savedOrder.includes(h2.dataset.sectionKey);
       });
 
-      [...orderedCards, ...missingCards].forEach(card => wrap.appendChild(card));
+      [...ordered, ...missing].forEach(card => wrap.appendChild(card));
+    }
+
+    function resetSectionOrderToDefault() {
+      try {
+        localStorage.removeItem(SECTION_ORDER_STORAGE_KEY);
+      } catch (e) {
+        // ignore
+      }
+      const wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+      const defaultOrder = ['settings','import','recipes','new-food','tags','planner','compact-week','history'];
+      const cardsByKey = new Map();
+      Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).forEach(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
+        if (h2 && h2.dataset.sectionKey) cardsByKey.set(h2.dataset.sectionKey, card);
+      });
+      defaultOrder.map(key => cardsByKey.get(key)).filter(Boolean).forEach(card => wrap.appendChild(card));
+      refreshSectionHeadings();
+      setSectionOrderStatus('Oletusjärjestys palautettu. Tallenna uusi järjestys tarvittaessa.', true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function refreshSectionHeadings() {
@@ -1753,7 +1792,6 @@
       }
 
       refreshSectionHeadings();
-      saveSectionOrder();
       window.scrollTo({ top: Math.max(card.getBoundingClientRect().top + window.scrollY - 20, 0), behavior: 'smooth' });
     }
 
@@ -1771,22 +1809,22 @@
 
         const cleanTitle = h2.textContent.replace(/^\d+\.\s*/, '').trim();
         card.dataset.sectionTitle = cleanTitle;
-
-        if (!card.querySelector('.section-order-controls')) {
-          const controls = document.createElement('div');
-          controls.className = 'section-order-controls';
-          controls.innerHTML = `
-            <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
-            <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
-          `;
-          h2.insertAdjacentElement('afterend', controls);
-        }
       });
 
+      applySavedSectionOrder();
       refreshSectionHeadings();
+
+      const saveBtn = document.getElementById('saveSectionOrderBtn');
+      if (saveBtn) {
+        saveBtn.onclick = saveSectionOrderToLocalStorage;
+      }
+
+      const resetBtn = document.getElementById('resetSectionOrderBtn');
+      if (resetBtn) {
+        resetBtn.onclick = resetSectionOrderToDefault;
+      }
     }
 
-    initSectionOrdering();
   </script>
 </body>
 </html>
