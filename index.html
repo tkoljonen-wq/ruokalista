@@ -449,6 +449,24 @@
       background:#fafafa;
     }
 
+  
+    .section-order-controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:-2px 0 12px;
+    }
+
+    .section-order-controls button{
+      width:auto;
+      padding:10px 14px;
+      font-size:14px;
+      min-height:42px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
   </style>
 </head>
 <body>
@@ -868,11 +886,6 @@
               <div class="planner-number">${rowIndex + 1}</div>
               <div class="weekday">${escapeHtml(row.weekday)}</div>
             </div>
-          </div>
-
-          <div class="planner-controls-row">
-            <button type="button" class="secondary" onclick="movePlannerRow(${rowIndex}, ${rowIndex - 1})" ${rowIndex === 0 ? 'disabled' : ''}>↑ Siirrä ylemmäs</button>
-            <button type="button" class="secondary" onclick="movePlannerRow(${rowIndex}, ${rowIndex + 1})" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Siirrä alemmas</button>
           </div>
 
           <label>Tämän päivän tagisuodatus</label>
@@ -1648,6 +1661,75 @@
     });
 
     loadInit();
+  
+    function refreshSectionHeadings() {
+      const sectionCards = Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'));
+      sectionCards.forEach((card, index) => {
+        const h2 = card.querySelector('h2');
+        if (!h2) return;
+        const cleanTitle = (card.dataset.sectionTitle || h2.textContent.replace(/^\d+\.\s*/, '').trim());
+        card.dataset.sectionTitle = cleanTitle;
+        h2.textContent = `${index + 1}. ${cleanTitle}`;
+
+        const upBtn = card.querySelector('.section-move-up');
+        const downBtn = card.querySelector('.section-move-down');
+        if (upBtn) upBtn.disabled = index === 0;
+        if (downBtn) downBtn.disabled = index === sectionCards.length - 1;
+      });
+    }
+
+    function moveSection(buttonEl, direction) {
+      const card = buttonEl.closest('.card[data-reorderable-section="1"]');
+      if (!card) return;
+
+      const container = card.parentElement;
+      const sectionCards = Array.from(container.querySelectorAll('.card[data-reorderable-section="1"]'));
+      const currentIndex = sectionCards.indexOf(card);
+      if (currentIndex < 0) return;
+
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= sectionCards.length) return;
+
+      const targetCard = sectionCards[targetIndex];
+      if (direction < 0) {
+        container.insertBefore(card, targetCard);
+      } else {
+        container.insertBefore(targetCard, card);
+      }
+
+      refreshSectionHeadings();
+      window.scrollTo({ top: Math.max(card.getBoundingClientRect().top + window.scrollY - 20, 0), behavior: 'smooth' });
+    }
+
+    function initSectionOrdering() {
+      const allCards = Array.from(document.querySelectorAll('.wrap > .card'));
+      const sectionCards = allCards.filter(card => {
+        const h2 = card.querySelector('h2');
+        return !!h2 && /^\d+\.\s/.test(h2.textContent.trim());
+      });
+
+      sectionCards.forEach(card => {
+        card.dataset.reorderableSection = '1';
+        const h2 = card.querySelector('h2');
+        if (!h2) return;
+
+        const cleanTitle = h2.textContent.replace(/^\d+\.\s*/, '').trim();
+        card.dataset.sectionTitle = cleanTitle;
+
+        if (!card.querySelector('.section-order-controls')) {
+          const controls = document.createElement('div');
+          controls.className = 'section-order-controls';
+          controls.innerHTML = `
+            <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+            <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+          `;
+          h2.insertAdjacentElement('afterend', controls);
+        }
+      });
+
+      refreshSectionHeadings();
+    }
+
   </script>
 </body>
 </html>
