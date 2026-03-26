@@ -491,6 +491,50 @@
       color:var(--muted);
     }
 
+
+    .shopping-list-box{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fafafa;
+    }
+
+    .shopping-list-items{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .shopping-item-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+
+    .shopping-item-row input{
+      min-width:0;
+    }
+
+    .shopping-item-row button{
+      width:auto;
+      min-height:46px;
+      padding:10px 14px;
+    }
+
+    .shopping-list-meta{
+      margin-top:8px;
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .shopping-list-empty{
+      color:var(--muted);
+      margin-top:8px;
+    }
+
   </style>
 </head>
 <body>
@@ -676,6 +720,24 @@
         <button id="clearPlanBtn" class="secondary">Tyhjennä valinnat</button>
       </div>
 
+      <div class="row" style="margin-top:12px;">
+        <button id="buildShoppingListBtn" class="ghost">Luo ostoslista</button>
+        <button id="copyShoppingListBtn" class="secondary">Kopioi lista leikepöydälle</button>
+      </div>
+
+      <div class="shopping-list-box">
+        <h3 style="margin-bottom:8px;">Ostoslista</h3>
+        <div class="small muted">Lista muodostetaan nykyisen ruokalistasuunnitelman reseptien ainesosista. Voit muokata rivejä ja poistaa tuotteita ennen kopiointia.</div>
+        <div id="shoppingListMeta" class="shopping-list-meta"></div>
+        <div id="shoppingListArea" class="shopping-list-items"></div>
+        <div id="shoppingListEmpty" class="shopping-list-empty">Ostoslista ilmestyy tähän, kun painat “Luo ostoslista”.</div>
+        <div class="row" style="margin-top:12px;">
+          <button id="addShoppingItemBtn" class="secondary">Lisää rivi käsin</button>
+          <button id="clearShoppingListBtn" class="secondary">Tyhjennä ostoslista</button>
+        </div>
+        <div id="shoppingListStatus"></div>
+      </div>
+
       <div id="saveStatus"></div>
     </div>
 
@@ -770,7 +832,8 @@
       modalMode: 'view',
       recipeManagerOpen: false,
       includeInactiveRecipes: false,
-      isCreatingRecipe: false
+      isCreatingRecipe: false,
+      shoppingListItems: []
     };
 
     function escapeHtml(str) {
@@ -833,6 +896,7 @@
       renderFoodEditor();
       renderPlanner();
       renderCompactWeek();
+      renderShoppingList();
       renderHistory();
 
       setStatus('settingsStatus', '');
@@ -857,6 +921,7 @@
 
       renderPlanner();
       renderCompactWeek();
+      clearShoppingList();
       setStatus('saveStatus', '');
     }
 
@@ -1480,6 +1545,158 @@
       setStatus('tagEditorStatus', 'Ruoan tagit tallennettu.');
     }
 
+
+    function findRecipeForPlannerRow(row) {
+      if (!row) return null;
+
+      if (row.recipeId) {
+        const byId = state.recipes.find(recipe => String(recipe.recipeId || '') === String(row.recipeId || ''));
+        if (byId) return byId;
+      }
+
+      const normFoodName = String(row.foodName || '').trim().toLowerCase();
+      if (!normFoodName) return null;
+
+      return state.recipes.find(recipe => String(recipe.name || '').trim().toLowerCase() === normFoodName) || null;
+    }
+
+    function splitIngredientsToItems(text) {
+      return String(text || '')
+        .replace(/\r/g, '\n')
+        .split(/\n|;/)
+        .map(line => line.replace(/^\s*[•\-*]\s*/, '').trim())
+        .filter(Boolean);
+    }
+
+    function setShoppingListStatus(text, ok = true) {
+      setStatus('shoppingListStatus', text, ok);
+    }
+
+    function renderShoppingList() {
+      const area = document.getElementById('shoppingListArea');
+      const empty = document.getElementById('shoppingListEmpty');
+      const meta = document.getElementById('shoppingListMeta');
+
+      if (!state.shoppingListItems.length) {
+        area.innerHTML = '';
+        empty.style.display = '';
+        meta.textContent = '';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      area.innerHTML = state.shoppingListItems.map((item, index) => `
+        <div class="shopping-item-row">
+          <input type="text" value="${escapeHtml(item)}" data-shopping-index="${index}">
+          <button type="button" class="danger" data-remove-shopping-index="${index}">Poista</button>
+        </div>
+      `).join('');
+
+      meta.textContent = `Rivejä yhteensä: ${state.shoppingListItems.length}`;
+
+      document.querySelectorAll('[data-shopping-index]').forEach(input => {
+        input.oninput = () => {
+          const idx = Number(input.dataset.shoppingIndex);
+          state.shoppingListItems[idx] = input.value || '';
+          meta.textContent = `Rivejä yhteensä: ${state.shoppingListItems.filter(Boolean).length}`;
+        };
+      });
+
+      document.querySelectorAll('[data-remove-shopping-index]').forEach(btn => {
+        btn.onclick = () => {
+          const idx = Number(btn.dataset.removeShoppingIndex);
+          state.shoppingListItems.splice(idx, 1);
+          renderShoppingList();
+        };
+      });
+    }
+
+    function clearShoppingList() {
+      state.shoppingListItems = [];
+      renderShoppingList();
+      setShoppingListStatus('');
+    }
+
+    function buildShoppingList() {
+      if (!state.planner.length) {
+        setShoppingListStatus('Luo ensin ruokalistarunko.', false);
+        return;
+      }
+
+      const items = [];
+      const missingRecipes = [];
+
+      state.planner.forEach(row => {
+        if (!row.foodName) return;
+
+        const recipe = findRecipeForPlannerRow(row);
+        if (!recipe || !String(recipe.ingredients || '').trim()) {
+          missingRecipes.push(row.foodName);
+          return;
+        }
+
+        items.push(...splitIngredientsToItems(recipe.ingredients));
+      });
+
+      state.shoppingListItems = items;
+
+      renderShoppingList();
+
+      if (!items.length && missingRecipes.length) {
+        setShoppingListStatus('Yhdellekään valitulle ruokalajille ei löytynyt käytettävää aineslistaa.', false);
+        return;
+      }
+
+      if (missingRecipes.length) {
+        setShoppingListStatus(`Ostoslista luotu. Näiltä ruokalajeilta puuttui resepti tai aineslista: ${missingRecipes.join(', ')}`, true);
+        return;
+      }
+
+      setShoppingListStatus('Ostoslista luotu.');
+    }
+
+    async function copyShoppingListToClipboard() {
+      const cleaned = state.shoppingListItems
+        .map(item => String(item || '').trim())
+        .filter(Boolean);
+
+      if (!cleaned.length) {
+        setShoppingListStatus('Ostoslista on tyhjä.', false);
+        return;
+      }
+
+      const text = cleaned.join('\n');
+
+      try {
+        await navigator.clipboard.writeText(text);
+        setShoppingListStatus('Ostoslista kopioitu leikepöydälle.');
+      } catch (err) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (!ok) throw new Error('copy failed');
+          setShoppingListStatus('Ostoslista kopioitu leikepöydälle.');
+        } catch (err2) {
+          setShoppingListStatus('Kopiointi epäonnistui tässä selaimessa.', false);
+        }
+      }
+    }
+
+    function addEmptyShoppingListRow() {
+      state.shoppingListItems.push('');
+      renderShoppingList();
+      setShoppingListStatus('');
+    }
+
     async function savePlan() {
       if (!state.planner.length) {
         setStatus('saveStatus', 'Luo ensin ruokalistarunko.', false);
@@ -1659,6 +1876,7 @@
 
       renderPlanner();
       renderCompactWeek();
+      clearShoppingList();
       setStatus('saveStatus', '');
     }
 
@@ -1686,6 +1904,10 @@
     document.getElementById('saveFoodTagsBtn').addEventListener('click', saveFoodTags);
     document.getElementById('savePlanBtn').addEventListener('click', savePlan);
     document.getElementById('clearPlanBtn').addEventListener('click', clearPlanner);
+    document.getElementById('buildShoppingListBtn').addEventListener('click', buildShoppingList);
+    document.getElementById('copyShoppingListBtn').addEventListener('click', copyShoppingListToClipboard);
+    document.getElementById('addShoppingItemBtn').addEventListener('click', addEmptyShoppingListRow);
+    document.getElementById('clearShoppingListBtn').addEventListener('click', clearShoppingList);
 
     document.getElementById('recipeSearchInput').addEventListener('input', (e) => {
       state.recipeSearch = e.target.value || '';
