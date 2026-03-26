@@ -87,6 +87,11 @@
       border:1px solid #c7d2fe;
     }
 
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
     .row{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -128,6 +133,46 @@
       padding:12px;
       margin-top:12px;
       background:#fafafa;
+    }
+
+    .planner-row-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+
+    .planner-order{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .planner-number{
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--accent);
+      color:#fff;
+      font-weight:800;
+      flex:0 0 34px;
+    }
+
+    .move-buttons{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .move-buttons button{
+      width:auto;
+      padding:9px 12px;
+      font-size:14px;
     }
 
     .weekday{
@@ -612,7 +657,6 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznsepZbfoN_ftmtf59rtlCP4NJnkXvwbyJXgpGKq6_ksA-anUHjt3CPeLnSPErF037cg/exec';
 
@@ -750,25 +794,6 @@
       setStatus('saveStatus', 'Järjestys päivitetty. Muista tallentaa ruokalista.');
     }
 
-    function initPlannerSorting() {
-      const area = document.getElementById('plannerArea');
-      if (!area || typeof Sortable === 'undefined') return;
-
-      if (area._sortableInstance) {
-        area._sortableInstance.destroy();
-      }
-
-      area._sortableInstance = Sortable.create(area, {
-        animation: 150,
-        handle: '.drag-handle',
-        draggable: '.planner-row',
-        ghostClass: 'dragging',
-        onEnd: (evt) => {
-          if (typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
-          movePlannerRow(evt.oldIndex, evt.newIndex);
-        }
-      });
-    }
 
     function renderPlanner() {
       const area = document.getElementById('plannerArea');
@@ -824,7 +849,10 @@
               <div class="planner-number">${rowIndex + 1}</div>
               <div class="weekday">${escapeHtml(row.weekday)}</div>
             </div>
-            <button type="button" class="drag-handle" aria-label="Raahaa järjestääksesi">⠿ Siirrä</button>
+            <div class="move-buttons">
+              <button type="button" class="ghost move-up-btn" data-move-up="${rowIndex}" aria-label="Siirrä ylemmäs" ${rowIndex === 0 ? 'disabled' : ''}>↑ Ylös</button>
+              <button type="button" class="ghost move-down-btn" data-move-down="${rowIndex}" aria-label="Siirrä alemmas" ${rowIndex === state.planner.length - 1 ? 'disabled' : ''}>↓ Alas</button>
+            </div>
           </div>
 
           <label>Tämän päivän tagisuodatus</label>
@@ -904,7 +932,20 @@
         };
       });
 
-      initPlannerSorting();
+      document.querySelectorAll('[data-move-up]').forEach(btn => {
+        btn.onclick = () => {
+          const rowIndex = Number(btn.dataset.moveUp);
+          movePlannerRow(rowIndex, rowIndex - 1);
+        };
+      });
+
+      document.querySelectorAll('[data-move-down]').forEach(btn => {
+        btn.onclick = () => {
+          const rowIndex = Number(btn.dataset.moveDown);
+          movePlannerRow(rowIndex, rowIndex + 1);
+        };
+      });
+
       bindRecipeButtons();
     }
 
@@ -925,7 +966,6 @@
         </div>
       `).join('');
 
-      initPlannerSorting();
       bindRecipeButtons();
     }
 
@@ -1492,7 +1532,6 @@
         };
       });
 
-      initPlannerSorting();
       bindRecipeButtons();
     }
 
