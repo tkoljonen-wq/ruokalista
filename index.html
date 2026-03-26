@@ -477,7 +477,7 @@
     </div>
 
     <div class="card">
-      <h2>1. Ruokalistan asetukset</h2>
+      <h2 data-section-key="settings">1. Ruokalistan asetukset</h2>
       <div class="row">
         <div>
           <label for="daysCount">Monelleko päivälle?</label>
@@ -506,7 +506,7 @@
     </div>
 
     <div class="card">
-      <h2>2. Reseptien tuonti</h2>
+      <h2 data-section-key="import">2. Reseptien tuonti</h2>
       <div class="small muted">
         Liitä reseptiteksti Google Sheetsin <strong>Tuonti</strong>-välilehden sarakkeeseen A riviltä 2 alaspäin. Teksti saa jakautua monelle riville. Paina sitten alla olevaa nappia.
       </div>
@@ -523,7 +523,7 @@
 
 
     <div class="card">
-      <h2>3. Reseptit</h2>
+      <h2 data-section-key="recipes">3. Reseptit</h2>
       <div class="row" style="align-items:end;">
         <div>
           <div class="small muted">Reseptien hallinta avautuu erikseen napin takaa, jotta etusivu pysyy lyhyempänä.</div>
@@ -563,7 +563,7 @@
     </div>
 
     <div class="card">
-      <h2>4. Lisää uusi ruokalaji</h2>
+      <h2 data-section-key="new-food">4. Lisää uusi ruokalaji</h2>
       <div class="row">
         <div>
           <label for="newFoodName">Ruokalajin nimi</label>
@@ -583,7 +583,7 @@
     </div>
 
     <div class="card">
-      <h2>5. Tagien hallinta</h2>
+      <h2 data-section-key="tags">5. Tagien hallinta</h2>
       <div class="row">
         <div class="editor-block">
           <h3>Lisää uusi tagi</h3>
@@ -614,7 +614,7 @@
     </div>
 
     <div class="card">
-      <h2>6. Ruokalistan suunnittelu</h2>
+      <h2 data-section-key="planner">6. Ruokalistan suunnittelu</h2>
       <label for="planName">Ruokalistan nimi</label>
       <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
 
@@ -629,12 +629,12 @@
     </div>
 
     <div class="card">
-      <h2>7. Kompakti viikkonäkymä</h2>
+      <h2 data-section-key="compact-week">7. Kompakti viikkonäkymä</h2>
       <div id="compactWeekView" class="week-grid"></div>
     </div>
 
     <div class="card">
-      <h2>8. Historia</h2>
+      <h2 data-section-key="history">8. Historia</h2>
       <div id="historyArea"></div>
     </div>
   </div>
@@ -1663,6 +1663,52 @@
     loadInit();
     initSectionOrdering();
   
+
+    const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-v1';
+
+    function saveSectionOrder() {
+      const sectionCards = Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'));
+      const order = sectionCards
+        .map(card => {
+          const h2 = card.querySelector('h2[data-section-key]');
+          return h2 ? h2.dataset.sectionKey : '';
+        })
+        .filter(Boolean);
+
+      localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(order));
+    }
+
+    function applySavedSectionOrder() {
+      const raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
+      if (!raw) return;
+
+      let savedOrder;
+      try {
+        savedOrder = JSON.parse(raw);
+      } catch (e) {
+        return;
+      }
+      if (!Array.isArray(savedOrder) || !savedOrder.length) return;
+
+      const wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+
+      const cardsByKey = new Map();
+      Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).forEach(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
+        if (h2 && h2.dataset.sectionKey) cardsByKey.set(h2.dataset.sectionKey, card);
+      });
+
+      const orderedCards = savedOrder.map(key => cardsByKey.get(key)).filter(Boolean);
+      const currentCards = Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]'));
+      const missingCards = currentCards.filter(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
+        return !h2 || !savedOrder.includes(h2.dataset.sectionKey);
+      });
+
+      [...orderedCards, ...missingCards].forEach(card => wrap.appendChild(card));
+    }
+
     function refreshSectionHeadings() {
       const sectionCards = Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'));
       sectionCards.forEach((card, index) => {
@@ -1698,7 +1744,9 @@
         container.insertBefore(targetCard, card);
       }
 
+      applySavedSectionOrder();
       refreshSectionHeadings();
+      saveSectionOrder();
       window.scrollTo({ top: Math.max(card.getBoundingClientRect().top + window.scrollY - 20, 0), behavior: 'smooth' });
     }
 
