@@ -613,7 +613,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyloo0QqjgFWflp4aH39LZyhOQp3ZOmHrqnsvVvj3yER3zsdXI-O2U1s5pazH-4IeCGMQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznsepZbfoN_ftmtf59rtlCP4NJnkXvwbyJXgpGKq6_ksA-anUHjt3CPeLnSPErF037cg/exec';
 
     const state = {
       tags: [],
@@ -1190,10 +1190,12 @@
       document.getElementById('newFoodName').value = '';
       state.foods = result.foods || state.foods;
       state.tags = result.tags || state.tags;
+      state.recipes = result.recipes || state.recipes;
 
       renderFoodEditor();
       renderPlanner();
-      setStatus('addFoodStatus', 'Ruokalaji lisätty.');
+      renderRecipeManager();
+      setStatus('addFoodStatus', 'Ruokalaji lisätty ja sille luotiin reseptipohja.');
     }
 
     async function addTag() {
