@@ -468,8 +468,25 @@
     }
 
 
+    .section-order-controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:-2px 0 12px;
+    }
+
+    .section-order-controls button{
+      width:auto;
+      padding:10px 14px;
+      font-size:14px;
+      min-height:42px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
     .section-order-status{
-      margin-top:8px;
+      margin:6px 0 12px;
       font-size:14px;
       color:var(--muted);
     }
@@ -485,6 +502,13 @@
 
     <div class="card">
       <h2 data-section-key="settings">1. Ruokalistan asetukset</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+        <button type="button" class="ghost" id="saveSectionOrderBtn">Tallenna uusi järjestys</button>
+        <button type="button" class="secondary" id="resetSectionOrderBtn">Palauta oletusjärjestys</button>
+      </div>
+      <div class="section-order-status" id="sectionOrderStatus"></div>
       <div class="row">
         <div>
           <label for="daysCount">Monelleko päivälle?</label>
@@ -514,6 +538,10 @@
 
     <div class="card">
       <h2 data-section-key="import">2. Reseptien tuonti</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div class="small muted">
         Liitä reseptiteksti Google Sheetsin <strong>Tuonti</strong>-välilehden sarakkeeseen A riviltä 2 alaspäin. Teksti saa jakautua monelle riville. Paina sitten alla olevaa nappia.
       </div>
@@ -531,6 +559,10 @@
 
     <div class="card">
       <h2 data-section-key="recipes">3. Reseptit</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div class="row" style="align-items:end;">
         <div>
           <div class="small muted">Reseptien hallinta avautuu erikseen napin takaa, jotta etusivu pysyy lyhyempänä.</div>
@@ -571,6 +603,10 @@
 
     <div class="card">
       <h2 data-section-key="new-food">4. Lisää uusi ruokalaji</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div class="row">
         <div>
           <label for="newFoodName">Ruokalajin nimi</label>
@@ -591,6 +627,10 @@
 
     <div class="card">
       <h2 data-section-key="tags">5. Tagien hallinta</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div class="row">
         <div class="editor-block">
           <h3>Lisää uusi tagi</h3>
@@ -622,6 +662,10 @@
 
     <div class="card">
       <h2 data-section-key="planner">6. Ruokalistan suunnittelu</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <label for="planName">Ruokalistan nimi</label>
       <input id="planName" type="text" placeholder="Esim. Ensi viikon ruoat">
 
@@ -637,11 +681,19 @@
 
     <div class="card">
       <h2 data-section-key="compact-week">7. Kompakti viikkonäkymä</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div id="compactWeekView" class="week-grid"></div>
     </div>
 
     <div class="card">
       <h2 data-section-key="history">8. Historia</h2>
+      <div class="section-order-controls">
+        <button type="button" class="secondary section-move-up" onclick="moveSection(this, -1)">↑ Siirrä ylemmäs</button>
+        <button type="button" class="secondary section-move-down" onclick="moveSection(this, 1)">↓ Siirrä alemmas</button>
+      </div>
       <div id="historyArea"></div>
     </div>
   </div>
@@ -1671,7 +1723,8 @@
     initSectionOrdering();
   
 
-    const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-v7';
+    const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-manual-v1';
+    const DEFAULT_SECTION_ORDER = ['settings','import','recipes','new-food','tags','planner','compact-week','history'];
 
     function setSectionOrderStatus(message, ok = true) {
       const el = document.getElementById('sectionOrderStatus');
@@ -1680,88 +1733,17 @@
       el.style.color = ok ? 'var(--ok)' : 'var(--err)';
     }
 
-    function getCurrentSectionOrder() {
-      return Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'))
-        .map(card => {
-          const h2 = card.querySelector('h2[data-section-key]');
-          return h2 ? h2.dataset.sectionKey : '';
-        })
-        .filter(Boolean);
-    }
-
-    function saveSectionOrderToLocalStorage() {
-      try {
-        const order = getCurrentSectionOrder();
-        localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(order));
-        setSectionOrderStatus('Uusi järjestys tallennettu selaimeen.', true);
-      } catch (e) {
-        setSectionOrderStatus('Järjestyksen tallennus epäonnistui tässä selaimessa.', false);
-      }
-    }
-
-    function applySavedSectionOrder() {
-      let raw = null;
-      try {
-        raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
-      } catch (e) {
-        setSectionOrderStatus('Tallennettua järjestystä ei voitu lukea selaimesta.', false);
-        return;
-      }
-      if (!raw) return;
-
-      let savedOrder;
-      try {
-        savedOrder = JSON.parse(raw);
-      } catch (e) {
-        setSectionOrderStatus('Tallennettu järjestys oli virheellinen.', false);
-        return;
-      }
-      if (!Array.isArray(savedOrder) || !savedOrder.length) return;
-
-      const wrap = document.querySelector('.wrap');
-      if (!wrap) return;
-
-      const cardsByKey = new Map();
-      Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).forEach(card => {
-        const h2 = card.querySelector('h2[data-section-key]');
-        if (h2 && h2.dataset.sectionKey) cardsByKey.set(h2.dataset.sectionKey, card);
-      });
-
-      const ordered = savedOrder.map(key => cardsByKey.get(key)).filter(Boolean);
-      const missing = Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).filter(card => {
-        const h2 = card.querySelector('h2[data-section-key]');
-        return !h2 || !savedOrder.includes(h2.dataset.sectionKey);
-      });
-
-      [...ordered, ...missing].forEach(card => wrap.appendChild(card));
-    }
-
-    function resetSectionOrderToDefault() {
-      try {
-        localStorage.removeItem(SECTION_ORDER_STORAGE_KEY);
-      } catch (e) {
-        // ignore
-      }
-      const wrap = document.querySelector('.wrap');
-      if (!wrap) return;
-      const defaultOrder = ['settings','import','recipes','new-food','tags','planner','compact-week','history'];
-      const cardsByKey = new Map();
-      Array.from(wrap.querySelectorAll('.card[data-reorderable-section="1"]')).forEach(card => {
-        const h2 = card.querySelector('h2[data-section-key]');
-        if (h2 && h2.dataset.sectionKey) cardsByKey.set(h2.dataset.sectionKey, card);
-      });
-      defaultOrder.map(key => cardsByKey.get(key)).filter(Boolean).forEach(card => wrap.appendChild(card));
-      refreshSectionHeadings();
-      setSectionOrderStatus('Oletusjärjestys palautettu. Tallenna uusi järjestys tarvittaessa.', true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function getSectionCards() {
+      return Array.from(document.querySelectorAll('.wrap > .card[data-reorderable-section="1"]'));
     }
 
     function refreshSectionHeadings() {
-      const sectionCards = Array.from(document.querySelectorAll('.card[data-reorderable-section="1"]'));
+      const sectionCards = getSectionCards();
       sectionCards.forEach((card, index) => {
-        const h2 = card.querySelector('h2');
+        const h2 = card.querySelector('h2[data-section-key]');
         if (!h2) return;
-        const cleanTitle = (card.dataset.sectionTitle || h2.textContent.replace(/^\d+\.\s*/, '').trim());
+
+        const cleanTitle = card.dataset.sectionTitle || h2.textContent.replace(/^\d+\.\s*/, '').trim();
         card.dataset.sectionTitle = cleanTitle;
         h2.textContent = `${index + 1}. ${cleanTitle}`;
 
@@ -1776,54 +1758,106 @@
       const card = buttonEl.closest('.card[data-reorderable-section="1"]');
       if (!card) return;
 
-      const container = card.parentElement;
-      const sectionCards = Array.from(container.querySelectorAll('.card[data-reorderable-section="1"]'));
+      const sectionCards = getSectionCards();
       const currentIndex = sectionCards.indexOf(card);
-      if (currentIndex < 0) return;
-
       const targetIndex = currentIndex + direction;
-      if (targetIndex < 0 || targetIndex >= sectionCards.length) return;
+      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= sectionCards.length) return;
 
+      const parent = card.parentElement;
       const targetCard = sectionCards[targetIndex];
+
       if (direction < 0) {
-        container.insertBefore(card, targetCard);
+        parent.insertBefore(card, targetCard);
       } else {
-        container.insertBefore(targetCard, card);
+        parent.insertBefore(targetCard, card);
       }
 
       refreshSectionHeadings();
-      window.scrollTo({ top: Math.max(card.getBoundingClientRect().top + window.scrollY - 20, 0), behavior: 'smooth' });
+      setSectionOrderStatus('Järjestys muuttui. Paina “Tallenna uusi järjestys”, jos haluat säilyttää sen.', true);
+    }
+
+    function getCurrentSectionOrder() {
+      return getSectionCards()
+        .map(card => {
+          const h2 = card.querySelector('h2[data-section-key]');
+          return h2 ? h2.dataset.sectionKey : '';
+        })
+        .filter(Boolean);
+    }
+
+    function saveSectionOrderToLocalStorage() {
+      try {
+        localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(getCurrentSectionOrder()));
+        setSectionOrderStatus('Uusi järjestys tallennettu selaimeen.', true);
+      } catch (e) {
+        setSectionOrderStatus('Tallennus epäonnistui tässä selaimessa.', false);
+      }
+    }
+
+    function applySectionOrder(order) {
+      const wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+
+      const cardsByKey = new Map();
+      getSectionCards().forEach(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
+        if (h2 && h2.dataset.sectionKey) {
+          cardsByKey.set(h2.dataset.sectionKey, card);
+        }
+      });
+
+      const ordered = order.map(key => cardsByKey.get(key)).filter(Boolean);
+      const missing = getSectionCards().filter(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
+        return !h2 || !order.includes(h2.dataset.sectionKey);
+      });
+
+      [...ordered, ...missing].forEach(card => wrap.appendChild(card));
+      refreshSectionHeadings();
+    }
+
+    function applySavedSectionOrder() {
+      try {
+        const raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
+        if (!raw) return;
+        const order = JSON.parse(raw);
+        if (Array.isArray(order) && order.length) {
+          applySectionOrder(order);
+        }
+      } catch (e) {
+        setSectionOrderStatus('Tallennetun järjestyksen luku epäonnistui.', false);
+      }
+    }
+
+    function resetSectionOrderToDefault() {
+      applySectionOrder(DEFAULT_SECTION_ORDER);
+      try {
+        localStorage.removeItem(SECTION_ORDER_STORAGE_KEY);
+      } catch (e) {}
+      setSectionOrderStatus('Oletusjärjestys palautettu. Tallenna uusi järjestys tarvittaessa.', true);
     }
 
     function initSectionOrdering() {
       const allCards = Array.from(document.querySelectorAll('.wrap > .card'));
-      const sectionCards = allCards.filter(card => {
-        const h2 = card.querySelector('h2');
-        return !!h2 && /^\d+\.\s/.test(h2.textContent.trim());
-      });
-
-      sectionCards.forEach(card => {
-        card.dataset.reorderableSection = '1';
-        const h2 = card.querySelector('h2');
+      allCards.forEach(card => {
+        const h2 = card.querySelector('h2[data-section-key]');
         if (!h2) return;
-
-        const cleanTitle = h2.textContent.replace(/^\d+\.\s*/, '').trim();
-        card.dataset.sectionTitle = cleanTitle;
+        card.dataset.reorderableSection = '1';
+        card.dataset.sectionTitle = h2.textContent.replace(/^\d+\.\s*/, '').trim();
       });
 
       applySavedSectionOrder();
       refreshSectionHeadings();
 
       const saveBtn = document.getElementById('saveSectionOrderBtn');
-      if (saveBtn) {
-        saveBtn.onclick = saveSectionOrderToLocalStorage;
-      }
+      if (saveBtn) saveBtn.onclick = saveSectionOrderToLocalStorage;
 
       const resetBtn = document.getElementById('resetSectionOrderBtn');
-      if (resetBtn) {
-        resetBtn.onclick = resetSectionOrderToDefault;
-      }
+      if (resetBtn) resetBtn.onclick = resetSectionOrderToDefault;
     }
+
+
+    initSectionOrdering();
 
   </script>
 </body>
