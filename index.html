@@ -1661,7 +1661,6 @@
     });
 
     loadInit();
-    initSectionOrdering();
   
 
     const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-v1';
@@ -1675,11 +1674,20 @@
         })
         .filter(Boolean);
 
-      localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(order));
+      try {
+        localStorage.setItem(SECTION_ORDER_STORAGE_KEY, JSON.stringify(order));
+      } catch (e) {
+        // Selaimen tallennus ei ole käytettävissä.
+      }
     }
 
     function applySavedSectionOrder() {
-      const raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
+      let raw = null;
+      try {
+        raw = localStorage.getItem(SECTION_ORDER_STORAGE_KEY);
+      } catch (e) {
+        return;
+      }
       if (!raw) return;
 
       let savedOrder;
@@ -1778,6 +1786,7 @@
       refreshSectionHeadings();
     }
 
+    initSectionOrdering();
   </script>
 </body>
 </html>
