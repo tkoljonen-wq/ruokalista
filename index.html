@@ -1720,9 +1720,6 @@
     });
 
     loadInit();
-    initSectionOrdering();
-  
-
     const SECTION_ORDER_STORAGE_KEY = 'mita-tanaan-syotaisiin-section-order-manual-v1';
     const DEFAULT_SECTION_ORDER = ['settings','import','recipes','new-food','tags','planner','compact-week','history'];
 
@@ -1855,10 +1852,7 @@
       const resetBtn = document.getElementById('resetSectionOrderBtn');
       if (resetBtn) resetBtn.onclick = resetSectionOrderToDefault;
     }
-
-
     initSectionOrdering();
-
   </script>
 </body>
 </html>
