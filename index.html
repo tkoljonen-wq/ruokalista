@@ -612,6 +612,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznsepZbfoN_ftmtf59rtlCP4NJnkXvwbyJXgpGKq6_ksA-anUHjt3CPeLnSPErF037cg/exec';
 
@@ -729,6 +730,46 @@
       return `<div class="selected-actions"><button class="ghost show-recipe-btn" data-recipe-id="${escapeHtml(recipeId || '')}" data-food-id="${escapeHtml(foodId || '')}">Näytä resepti</button></div>`;
     }
 
+    function normalizePlannerSequences() {
+      state.planner = state.planner.map((row, index) => ({
+        ...row,
+        sequence: index + 1
+      }));
+    }
+
+    function movePlannerRow(oldIndex, newIndex) {
+      if (oldIndex === newIndex) return;
+      if (oldIndex < 0 || newIndex < 0) return;
+      if (oldIndex >= state.planner.length || newIndex >= state.planner.length) return;
+
+      const [moved] = state.planner.splice(oldIndex, 1);
+      state.planner.splice(newIndex, 0, moved);
+      normalizePlannerSequences();
+      renderPlanner();
+      renderCompactWeek();
+      setStatus('saveStatus', 'Järjestys päivitetty. Muista tallentaa ruokalista.');
+    }
+
+    function initPlannerSorting() {
+      const area = document.getElementById('plannerArea');
+      if (!area || typeof Sortable === 'undefined') return;
+
+      if (area._sortableInstance) {
+        area._sortableInstance.destroy();
+      }
+
+      area._sortableInstance = Sortable.create(area, {
+        animation: 150,
+        handle: '.drag-handle',
+        draggable: '.planner-row',
+        ghostClass: 'dragging',
+        onEnd: (evt) => {
+          if (typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
+          movePlannerRow(evt.oldIndex, evt.newIndex);
+        }
+      });
+    }
+
     function renderPlanner() {
       const area = document.getElementById('plannerArea');
 
@@ -742,6 +783,7 @@
       state.planner.forEach((row, rowIndex) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'planner-row';
+        wrapper.dataset.rowIndex = String(rowIndex);
 
         const filterChips = state.tags.map(tag => `
           <button class="chip ${row.filterTags.includes(tag) ? 'active' : ''}" data-row-tag="${rowIndex}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>
@@ -777,7 +819,13 @@
           : '';
 
         wrapper.innerHTML = `
-          <div class="weekday">${escapeHtml(row.weekday)}</div>
+          <div class="planner-row-top">
+            <div class="planner-order">
+              <div class="planner-number">${rowIndex + 1}</div>
+              <div class="weekday">${escapeHtml(row.weekday)}</div>
+            </div>
+            <button type="button" class="drag-handle" aria-label="Raahaa järjestääksesi">⠿ Siirrä</button>
+          </div>
 
           <label>Tämän päivän tagisuodatus</label>
           <div class="chips">${filterChips || '<div class="muted">Ei tageja</div>'}</div>
@@ -856,6 +904,7 @@
         };
       });
 
+      initPlannerSorting();
       bindRecipeButtons();
     }
 
@@ -867,15 +916,16 @@
         return;
       }
 
-      area.innerHTML = state.planner.map(row => `
+      area.innerHTML = state.planner.map((row, index) => `
         <div class="week-cell">
-          <h4>${escapeHtml(row.weekday)}</h4>
+          <h4>${index + 1}. ${escapeHtml(row.weekday)}</h4>
           <div class="week-food">${escapeHtml(row.foodName || '—')}</div>
           ${row.tags && row.tags.length ? `<div class="tagline">${escapeHtml(row.tags.join(', '))}</div>` : ''}
           ${row.hasRecipe || row.recipeId || row.foodId ? `<button class="ghost show-recipe-btn" data-recipe-id="${escapeHtml(row.recipeId || '')}" data-food-id="${escapeHtml(row.foodId || '')}">Näytä resepti</button>` : ''}
         </div>
       `).join('');
 
+      initPlannerSorting();
       bindRecipeButtons();
     }
 
@@ -1442,6 +1492,7 @@
         };
       });
 
+      initPlannerSorting();
       bindRecipeButtons();
     }
 
